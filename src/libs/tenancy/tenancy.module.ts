@@ -1,16 +1,17 @@
-import { BadRequestException, Module, Scope } from '@nestjs/common';
+import { Module, Scope, BadRequestException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import {
   createCorporateDataSource,
   extractSubdomain,
+  subDomainRequestKey,
   subDomainSourceEnum,
+  TENANT_CONNECTION,
 } from './utils';
 import { ContextualEventEmitterService } from './context-event-emitter';
 import { ContextualRabbitMQService } from './context-rmq';
 import { RmqModule, RmqServiceServices } from '../rmq/rmq.module';
-export const TENANT_CONNECTION = 'TENANT_CONNECTION';
-
-export const subDomainRequestKey = 'subDomainRequestKey';
+import { Request } from 'express';
+import { DataSource } from 'typeorm';
 
 @Module({
   imports: [
@@ -19,31 +20,36 @@ export const subDomainRequestKey = 'subDomainRequestKey';
   providers: [
     {
       provide: TENANT_CONNECTION,
-      inject: [REQUEST],
       scope: Scope.REQUEST,
-      useFactory: async (request) => {
+      inject: [REQUEST],
+      useFactory: async (request: Request): Promise<DataSource> => {
         const subdomainObject = extractSubdomain(request);
 
-        if (!subdomainObject || !subdomainObject.subdomain) {
+        if (!subdomainObject?.subdomain) {
           throw new BadRequestException(
             'Subdomain not found. Please ensure the correct subdomain is included in your request.',
           );
         }
 
         const { subdomain, source } = subdomainObject;
-
         request[subDomainRequestKey] = subdomainObject;
 
         // inject it inside the data if its RMQ
         if(subDomainSourceEnum.RMQ === source) {
-          request.data[subDomainRequestKey] = subdomainObject;
+          (request as any).data[subDomainRequestKey] = subdomainObject;
         }
 
-        return createCorporateDataSource(subdomain);
+        const dataSource = createCorporateDataSource(subdomain);
+
+        try {
+          return await dataSource.initialize();
+        } catch (error) {
+          throw new BadRequestException('Failed to initialize tenant data source.', error.message);
+        }
       },
     },
-    ContextualEventEmitterService,
-    ContextualRabbitMQService
+    ContextualRabbitMQService,
+    ContextualEventEmitterService
   ],
   exports: [TENANT_CONNECTION, ContextualEventEmitterService, ContextualRabbitMQService],
 })

@@ -2,7 +2,7 @@ import { Injectable, Scope, Inject } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { REQUEST } from '@nestjs/core';
 import { Request } from 'express';
-import { subDomainRequestKey } from './tenancy.module';
+import { subDomainRequestKey } from './utils';
 import { subDomainSource } from './utils';
 import { TenantService } from '../decorators/tenant-service.decorator';
 

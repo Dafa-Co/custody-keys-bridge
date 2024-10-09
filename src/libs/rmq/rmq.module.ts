@@ -7,7 +7,8 @@ export enum RmqServiceServices {
   CustodySolution = 'CustodySolution',
 }
 
-@Module({})
+@Module({
+})
 export class RmqModule {
   static register(service: RmqServiceServices): DynamicModule {
     const providers = [{

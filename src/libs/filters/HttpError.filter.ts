@@ -20,6 +20,8 @@ export class HttpErrorFilter implements ExceptionFilter {
     const request = ctx.getRequest();
     const response = ctx.getResponse();
 
+    console.log(exception);
+
     if((exception as any).error){
       response.status((exception as any).error.statusCode).json({
         status: (exception as any).error.statusCode,

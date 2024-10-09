@@ -5,6 +5,7 @@ export const routingKeys = {
 
     custodySolution: {
         validateAccessToken: 'custody.auth.validateAccessToken',
+        syncRequest: 'custody.sync',
     }
 
   },

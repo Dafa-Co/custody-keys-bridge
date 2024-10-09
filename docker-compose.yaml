@@ -1,0 +1,15 @@
+services:
+  bridge_backend:
+    build: .
+    env_file: .env
+    volumes:
+      - .:/usr/src/app
+    networks:
+      - custody_global_network
+    scale: 1
+
+
+networks:
+  custody_global_network:
+    external: true
+    name: services_custody_global_network

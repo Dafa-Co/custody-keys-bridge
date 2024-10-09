@@ -1,6 +1,6 @@
 import type { ExecutionContext } from '@nestjs/common';
 import { createParamDecorator } from '@nestjs/common';
-import { subDomainRequestKey } from '../tenancy/tenancy.module';
+import { subDomainRequestKey } from '../tenancy/utils';
 import { subDomainSource } from '../tenancy/utils';
 
 /**

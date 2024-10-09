@@ -1,11 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { CanActivate, ExecutionContext } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import { requestAdminKey } from 'src/libs/decorators/current-admin.decorator';
-import { subDomainSource } from 'src/libs/tenancy/utils';
-import { subDomainRequestKey } from 'src/libs/tenancy/tenancy.module';
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 
-export const requestAuthorizationKey = 'authorization';
+const requestAuthorizationKey = 'authorization';
 
 @TenantService()
 export class AccessTokenGuard implements CanActivate {
@@ -25,6 +23,8 @@ export class AccessTokenGuard implements CanActivate {
     const admin = await this.authService.validateAccessToken(
       accessToken,
     );
+
+    console.log()
 
     request[requestAdminKey] = admin;
 

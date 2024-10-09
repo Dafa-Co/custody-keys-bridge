@@ -35,3 +35,5 @@ export function createCorporateDataSource(
     database: '../../database/' + corporateDatabase + '.sqlite',
   });
 }
+export const TENANT_CONNECTION = 'TENANT_CONNECTION';export const subDomainRequestKey = 'subDomainRequestKey';
+

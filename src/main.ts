@@ -9,7 +9,6 @@ import { configs } from './configs/configs';
 async function bootstrap() {
   const server = await NestFactory.create(AppModule, {
     forceCloseConnections: true,
-    abortOnError: false,
   });
 
   server.useGlobalPipes(new TrimPipe());

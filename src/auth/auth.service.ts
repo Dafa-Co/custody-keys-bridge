@@ -8,7 +8,7 @@ import { IAdminRequest } from 'src/libs/interfaces/admin-requrest.interface';
 export class AuthService {
 
     constructor(
-        private readonly contextRmqService: ContextualRabbitMQService
+        private readonly contextRmqService: ContextualRabbitMQService,
     ) {}
 
 
@@ -16,7 +16,7 @@ export class AuthService {
         const payload: IValidateAccessToken=  {
             accessToken
         }
-        const data = await this.contextRmqService.requestDataFroCustody(
+        const data = await this.contextRmqService.requestDataFromCustody<IAdminRequest>(
             routingKeys.messagePatterns.custodySolution.validateAccessToken,
             payload
         )
