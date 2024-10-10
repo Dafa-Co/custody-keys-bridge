@@ -5,6 +5,7 @@ import { TrimPipe } from './libs/transformers/trim.transformer';
 import { HttpErrorFilter } from './libs/filters/HttpError.filter';
 import { RemoveNullKeysPipe } from './libs/transformers/remove-null-pipe';
 import { configs } from './configs/configs';
+import { ResponseWrapperInterceptor } from './libs/interceptors/response-wrapper.interceptor';
 
 async function bootstrap() {
   const server = await NestFactory.create(AppModule, {
@@ -21,6 +22,7 @@ async function bootstrap() {
   server.useGlobalPipes(new RemoveNullKeysPipe());
 
   server.useGlobalPipes(new TrimPipe());
+
 
   const validationOptions: ValidationPipeOptions = {
     whitelist: true,
@@ -42,7 +44,8 @@ async function bootstrap() {
     new ClassSerializerInterceptor(server.get(Reflector)),
   );
 
-
+  // Apply the global interceptor
+  server.useGlobalInterceptors(new ResponseWrapperInterceptor());
 
 
   await server.listen(configs.PORT);

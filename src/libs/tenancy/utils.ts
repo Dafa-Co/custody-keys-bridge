@@ -1,3 +1,5 @@
+import * as path from 'path';
+import { SyncRequest } from 'src/keys-sync/entities/sync-request.entity';
 import { DataSource } from 'typeorm';
 
 export enum subDomainSourceEnum {
@@ -29,10 +31,14 @@ export function extractSubdomain(request: any): subDomainSource {
 export function createCorporateDataSource(
   corporateDatabase: string,
 ): DataSource {
+    // Resolve the path to the database using path.resolve()
+    const databasePath = path.resolve(process.cwd(), 'database', `${corporateDatabase}.sqlite`);
+
   return new DataSource({
     type: 'sqlite',
     synchronize: true,
-    database: '../../database/' + corporateDatabase + '.sqlite',
+    database: databasePath,
+    entities: [SyncRequest],
   });
 }
 export const TENANT_CONNECTION = 'TENANT_CONNECTION';export const subDomainRequestKey = 'subDomainRequestKey';

@@ -40,7 +40,6 @@ import { DataSource } from 'typeorm';
         }
 
         const dataSource = createCorporateDataSource(subdomain);
-
         try {
           return await dataSource.initialize();
         } catch (error) {
