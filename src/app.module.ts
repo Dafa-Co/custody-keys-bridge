@@ -23,6 +23,7 @@ import { KeysSyncModule } from './keys-sync/keys-sync.module';
     AuthModule,
     KeysSyncModule,
   ],
+  controllers: [],
   providers: [
     {
       provide: APP_GUARD,

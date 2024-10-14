@@ -1,11 +1,11 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Header, Post, Query, Res } from '@nestjs/common';
 import { KeysSyncService } from './keys-sync.service';
 import { SyncRequestDto } from './dto/sync-request.dto';
 import { IAdminRequest } from 'src/libs/interfaces/admin-requrest.interface';
 import { CurrentAdmin } from 'src/libs/decorators/current-admin.decorator';
 import { CurrentSubdomain } from 'src/libs/decorators/current-subdomain.decorator';
 import { subDomainSource } from 'src/libs/tenancy/utils';
-import { SyncRequestFilter } from './entities/sync-request.entity';
+import { Response as expressResponse } from 'express';
 
 @Controller('sync')
 export class KeysSyncController {
@@ -19,25 +19,12 @@ export class KeysSyncController {
     async syncRequest(
         @Body() syncRequestDto: SyncRequestDto,
         @CurrentAdmin() admin: IAdminRequest,
-        @CurrentSubdomain() subdomain: subDomainSource
+        @CurrentSubdomain() subdomain: subDomainSource,
+        @Res() res: expressResponse
     ) {
         syncRequestDto.admin = admin;
         syncRequestDto.subdomain = subdomain.subdomain;
-        const uuid = await this.keysSyncService.syncRequest(syncRequestDto)
-        return {
-            id: uuid
-        };
+        await this.keysSyncService.syncRequest(syncRequestDto, res)
+        return;
     }
-
-
-    @Get()
-    async getMySyncRequests(
-        @Query() query: SyncRequestFilter,
-        @CurrentAdmin() admin: IAdminRequest
-    ) {
-        query.filters['adminId'] = admin.id;
-        return this.keysSyncService.getMySyncRequests(query);
-    }
-
-
 }

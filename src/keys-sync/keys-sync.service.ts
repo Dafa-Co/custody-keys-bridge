@@ -4,56 +4,76 @@ import { SyncRequestDto } from './dto/sync-request.dto';
 import { ISyncRequestBridge, ISyncRequestBridgeResponse } from './interfaces/sync-request-bridge.interface';
 import { routingKeys } from 'src/libs/microservices/constant';
 import { TENANT_CONNECTION } from 'src/libs/tenancy/utils';
-import { Inject } from '@nestjs/common';
+import { Inject, UnprocessableEntityException } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
 import { SyncRequest } from './entities/sync-request.entity';
-import { IAdminRequest } from 'src/libs/interfaces/admin-requrest.interface';
 import { FilterInterface } from 'src/libs/api-feature/filter.interface';
 import { applyQueryBuilderOptions } from 'src/libs/api-feature/apply-query-options';
+import { IApiApprovalSyncDto } from './interfaces/api-approval-sync.interface';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
+import { VerifyKeyHeader } from 'src/libs/constant/api-approval-constant';
+import { AxiosResponse } from 'axios';
+import { Response } from 'express';
 
 @TenantService()
 export class KeysSyncService {
-    private syncRequestRepository: Repository<SyncRequest>;
 
 
     constructor(
         private readonly contextRabbitMQService: ContextualRabbitMQService,
         @Inject(TENANT_CONNECTION) private readonly dataSource: DataSource,
+        private readonly httpService: HttpService,
     ) {
-        this.syncRequestRepository = this.dataSource.getRepository(SyncRequest);
     }
 
-    async syncRequest(syncRequestDto: SyncRequestDto) {
-        const { vaultId, admin  } = syncRequestDto;
+    async syncRequest(syncRequestDto: SyncRequestDto, res: Response) {
+        const { vaultId, admin, keysIds, publicKey } = syncRequestDto;
 
         const payload: ISyncRequestBridge=  {
-            admin: syncRequestDto.admin,
-            vaultId: syncRequestDto.vaultId
+            admin: admin,
+            vaultId: vaultId
         }
         const data = await this.contextRabbitMQService.requestDataFromCustody<ISyncRequestBridgeResponse>(
             routingKeys.messagePatterns.custodySolution.syncRequest,
             payload
         )
-        const { apiApprovalUrl, verifyKey } = data;
-        const syncRequest = this.syncRequestRepository.create({
-            syncUrl: apiApprovalUrl,
-            verifyKey,
-            vaultId,
-            adminId: admin.id
-        })
 
-        const identifier = await this.syncRequestRepository.insert(syncRequest);
+        try {
+            await this.submitSyncRequest({
+                apiApprovalData: {
+                    keysIds: keysIds,
+                    publicKey: publicKey
+                },
+                syncData: data,
+            }, res);
+        } catch (error) {
+            throw new UnprocessableEntityException(error.message);
+        }
 
-        return identifier.identifiers[0].id;
     }
 
+    async submitSyncRequest(iApprovalSync: IApiApprovalSyncDto, res: Response) {
+        const { apiApprovalData, syncData } = iApprovalSync;
+        const { apiApprovalUrl, verifyKey } = syncData;
 
-    async getMySyncRequests(query: FilterInterface) {
-        const syncQuery = this.syncRequestRepository.createQueryBuilder('');
+        // Stream the response directly to the client
+        const response: AxiosResponse = await firstValueFrom(
+          this.httpService.post(apiApprovalUrl, apiApprovalData, {
+            headers: {
+              [VerifyKeyHeader]: verifyKey,
+            },
+            responseType: 'stream', // Ensure the response is a stream
+          })
+        );
 
-        return applyQueryBuilderOptions(syncQuery, query)
-    }
+        // Set appropriate headers and pipe the stream to the client
+        res.setHeader('Content-Type', 'application/octet-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
 
+        response.data.pipe(res); // Pipe the stream to the client
+      }
 
 
 }

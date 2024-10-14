@@ -6,6 +6,7 @@ import { HttpErrorFilter } from './libs/filters/HttpError.filter';
 import { RemoveNullKeysPipe } from './libs/transformers/remove-null-pipe';
 import { configs } from './configs/configs';
 import { ResponseWrapperInterceptor } from './libs/interceptors/response-wrapper.interceptor';
+import { validationFirstLabel } from './libs/decorators/validate-first.decorator';
 
 async function bootstrap() {
   const server = await NestFactory.create(AppModule, {
@@ -34,21 +35,24 @@ async function bootstrap() {
   };
 
   server.useGlobalPipes(
+
     // here we run the normal validation pipe and when we want to run the transformation after the validation we run the second validation pipe
     new ValidationPipe({
       ...validationOptions
     }),
+
+    new ValidationPipe({
+      ...validationOptions,
+      transformOptions: { groups: [validationFirstLabel] },
+    }),
+
   );
 
-  server.useGlobalInterceptors(
-    new ClassSerializerInterceptor(server.get(Reflector)),
-  );
+  // server.useGlobalInterceptors(
+  //   new ClassSerializerInterceptor(server.get(Reflector)),
+  // );
 
-  // Apply the global interceptor
-  server.useGlobalInterceptors(new ResponseWrapperInterceptor());
-
-
-  await server.listen(configs.PORT);
+  await server.listen(configs.PORT, '0.0.0.0');
   console.log(`Server is running on: ${await server.getUrl()}`);
 }
 bootstrap();

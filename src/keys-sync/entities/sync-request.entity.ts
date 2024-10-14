@@ -11,14 +11,13 @@ import {
   Entity,
   Column,
   PrimaryGeneratedColumn,
-  CreateDateColumn,
 } from 'typeorm';
 
 export enum SyncRequestStatus {
-  SUCCESS = 'success',
-  PENDING = 'pending',
-  FAILED = 'failed',
-  AUTH_FAILED = 'authFailed',
+  SUCCESS,
+  PENDING,
+  FAILED,
+  AUTH_FAILED,
 }
 
 @Entity('sync_requests')

@@ -1,21 +1,5 @@
 # base stage to have npm installed
-FROM node:20-alpine3.18 AS base
-
-# Install dependencies required by Puppeteer
-RUN apk add --no-cache \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont \
-    chromium \
-    alsa-lib \
-    bash
-
-# Set environment variables for Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+FROM node:22-slim
 
 # development stage
 ARG NODE_ENV=development

@@ -24,8 +24,6 @@ export class AccessTokenGuard implements CanActivate {
       accessToken,
     );
 
-    console.log()
-
     request[requestAdminKey] = admin;
 
     return true;
