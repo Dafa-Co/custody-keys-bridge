@@ -23,4 +23,4 @@ jobs:
            git pull 
            docker build -t $container_name . 
            docker stop $container_name  && docker rm $container_name
-           docker run -d -p 5000:3003 --name=$container_name  --restart=unless-stopped  $container_name "
+           docker run -d -p 5001:3003 --name=$container_name  --restart=unless-stopped  $container_name "
