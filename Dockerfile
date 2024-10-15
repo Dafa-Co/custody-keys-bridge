@@ -1,20 +1,15 @@
-# base stage to have npm installed
-FROM node:22-slim
-
-# development stage
+FROM node:20-slim 
 ARG NODE_ENV=development
 ENV NODE_ENV=${NODE_ENV}
 
+USER node
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json (if available)
-COPY package*.json ./
+COPY --chown=node:node package*.json ./
 
-# Install NPM packages
-RUN npm install
+RUN npm i
 
-# Copy the local code to the container's workspace.
-COPY . .
+COPY --chown=node:node . .
 
-# Command to run the application
-CMD ["npm", "run", "start:dev"]
+EXPOSE 3000
+CMD [ "npm","run","start:dev"]
