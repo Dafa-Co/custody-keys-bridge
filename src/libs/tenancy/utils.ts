@@ -1,6 +1,10 @@
 import * as path from 'path';
+import { EventEmitterConstantName, HTTP, JOB, RabbitMQ } from 'rox-custody_common-modules/libs/utils/request-type-constants';
 import { SyncRequest } from 'src/keys-sync/entities/sync-request.entity';
 import { DataSource } from 'typeorm';
+import { DBIdentifierRMQ } from '../microservices/constant';
+import { DBIdentifierJOB } from 'rox-custody_common-modules/libs/utils/microservice-constants';
+import { GoneException } from '@nestjs/common';
 
 export enum subDomainSourceEnum {
   HTTP = 'HTTP',
@@ -15,17 +19,31 @@ export interface subDomainSource {
 }
 
 export function extractSubdomain(request: any): subDomainSource {
-  const requestParts = request.headers.host.split('.');
-  if (requestParts.length === 1) {
-    return undefined;
+  if (request.constructor.name === RabbitMQ) {
+    return {
+      source: subDomainSourceEnum.RMQ,
+      subdomain: request?.data[DBIdentifierRMQ],
+    };
+  } else if (request.constructor.name === HTTP) {
+    let subdomain = request.headers.host.split('.')[0];
+
+    return {
+      source: subDomainSourceEnum.HTTP,
+      subdomain: subdomain,
+    };
+  } else if (request.constructor.name === JOB) {
+    return {
+      source: subDomainSourceEnum.JOB,
+      subdomain: request.data[DBIdentifierJOB],
+    };
+  } else if (request.constructor.name === EventEmitterConstantName){
+    return {
+      source: subDomainSourceEnum.EVENTEMITTER,
+      subdomain: request?.subdomain,
+    };
   }
 
-  // extract the subdomain from the request
-  // this is a very basic implementation and should be improved
-  return {
-    source: subDomainSourceEnum.HTTP,
-    subdomain: requestParts[0],
-  };
+  throw new GoneException('Invalid Request');
 }
 
 export function createCorporateDataSource(

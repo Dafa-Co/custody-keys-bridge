@@ -25,6 +25,9 @@ import { DataSource } from 'typeorm';
       useFactory: async (request: Request): Promise<DataSource> => {
         const subdomainObject = extractSubdomain(request);
 
+
+        console.log("subdomainObject", subdomainObject)
+
         if (!subdomainObject?.subdomain) {
           throw new BadRequestException(
             'Subdomain not found. Please ensure the correct subdomain is included in your request.',
