@@ -1,8 +1,8 @@
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
-import { routingKeys } from 'src/libs/microservices/constant';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import { IValidateAccessToken } from './interfaces/validate-access-token.interface';
 import { IAdminRequest } from 'src/libs/interfaces/admin-requrest.interface';
+import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
 
 @TenantService()
 export class AuthService {
@@ -17,7 +17,7 @@ export class AuthService {
             accessToken
         }
         const data = await this.contextRmqService.requestDataFromCustody<IAdminRequest>(
-            routingKeys.messagePatterns.custodySolution.validateAccessToken,
+            _MessagePatterns.bridge.validateAccessToken,
             payload
         )
 

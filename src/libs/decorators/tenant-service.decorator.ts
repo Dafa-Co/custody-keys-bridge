@@ -2,5 +2,5 @@ import { applyDecorators, Injectable, Scope } from '@nestjs/common';
 
 export const TenantService = () =>
   applyDecorators(
-    Injectable({ scope: Scope.REQUEST }),
+    Injectable({ scope: Scope.REQUEST, durable: true })
   );

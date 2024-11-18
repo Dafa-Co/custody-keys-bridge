@@ -17,6 +17,5 @@ export class SyncRequestDto {
     keysIds: number[];
 
     // from decorators
-    subdomain: string;
     admin: IAdminRequest
 }

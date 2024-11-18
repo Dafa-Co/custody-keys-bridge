@@ -1,7 +1,6 @@
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import {
-  ClassSerializerInterceptor,
   ValidationPipe,
   ValidationPipeOptions,
 } from '@nestjs/common';
@@ -9,14 +8,19 @@ import { TrimPipe } from './libs/transformers/trim.transformer';
 import { HttpErrorFilter } from './libs/filters/HttpError.filter';
 import { RemoveNullKeysPipe } from './libs/transformers/remove-null-pipe';
 import { configs } from './configs/configs';
-import { ResponseWrapperInterceptor } from './libs/interceptors/response-wrapper.interceptor';
 import { validationFirstLabel } from './libs/decorators/validate-first.decorator';
 import { RmqOptions, Transport } from '@nestjs/microservices';
+import { ContextIdFactory } from '@nestjs/core';
+import { AggregateByTenantContextIdStrategy } from './libs/tenancy/aggregate-by-tenant-context-id-strategy';
+
 
 async function bootstrap() {
   const server = await NestFactory.create(AppModule, {
     forceCloseConnections: true,
   });
+
+  // Register tenant-based context strategy
+  ContextIdFactory.apply(new AggregateByTenantContextIdStrategy());
 
   server.useGlobalPipes(new TrimPipe());
 

@@ -1,32 +1,35 @@
-// decorators/rabbit-topic-subscribe.decorator.ts
 import { RabbitSubscribe, RabbitHandlerConfig } from '@golevelup/nestjs-rabbitmq';
+import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from '../constant/constant';
 
-type CustodySubscribeOptions = Pick<RabbitHandlerConfig, "queue" | "exchange" | "routingKey" | "queueOptions" | "createQueueIfNotExists">;
+type CustodySubscribeOptions = Pick<
+  RabbitHandlerConfig,
+  'queue' | 'exchange' | 'routingKey' | 'queueOptions' | 'createQueueIfNotExists'
+>;
 
 export function CustodyKeysBridgeTopicSubscribe(options: Partial<CustodySubscribeOptions> = {}) {
-  // Default settings for the topic exchange
   const defaultOptions: CustodySubscribeOptions = {
-    exchange: '',
-    routingKey: 'custody.*', // Default routing key pattern
+    exchange: RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE,
+    routingKey: 'bridge.*',
     queue: '', // Generate unique queue name
     queueOptions: {
       exclusive: true,
-      autoDelete: true
+      autoDelete: true,
     },
-    createQueueIfNotExists: true
+    createQueueIfNotExists: true,
   };
 
-  // Merge default options with user-provided options
   const finalOptions = { ...defaultOptions, ...options };
 
-  // Apply the RabbitSubscribe decorator with merged options
   return (target: any, propertyKey: string | symbol, descriptor?: PropertyDescriptor) => {
+    // Preserve original method
+    const originalMethod = descriptor?.value;
+
+    // Apply RabbitSubscribe decorator
     RabbitSubscribe(finalOptions)(target, propertyKey, descriptor);
+
+    // Bind the method to the class instance
+    descriptor!.value = function (...args: any[]) {
+      return originalMethod.apply(this, args); // Bind `this` to the class instance
+    };
   };
-}
-
-
-
-export function CustodyKeysBridgeDirectExchange() {
-
 }

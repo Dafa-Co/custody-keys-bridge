@@ -4,4 +4,5 @@ export interface IAdminRequest {
     name: string;
     email: string;
     slug?: string;
+    vaultIds: number[]
 }
