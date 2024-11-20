@@ -1,7 +1,8 @@
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import { SyncRequestDto } from './dto/sync-request.dto';
-import { ISyncRequestBridge, ISyncRequestBridgeResponse } from './interfaces/sync-request-bridge.interface';
+import { ISyncRequestBridge } from '../../rox-custody_common-modules/libs/interfaces/sync-request-bridge.interface';
+import { IRequestDataFromApiApproval } from "rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface";
 import { Inject, UnprocessableEntityException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { IApiApprovalSyncDto } from './interfaces/api-approval-sync.interface';
@@ -29,7 +30,7 @@ export class KeysSyncService {
             admin: admin,
             vaultId: vaultId
         }
-        const data = await this.contextRabbitMQService.requestDataFromCustody<ISyncRequestBridgeResponse>(
+        const data = await this.contextRabbitMQService.requestDataFromCustody<IRequestDataFromApiApproval>(
             _MessagePatterns.bridge.syncRequest,
             payload
         )

@@ -1,12 +1,13 @@
-import { Controller, Sse } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { Controller, Sse, UseFilters } from '@nestjs/common';
+import { MessagePattern, Payload, RpcException } from '@nestjs/microservices';
 import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
 import { GenerateKeyPairBridge } from 'rox-custody_common-modules/libs/interfaces/generate-key.interface';
 import { PrivateServerService } from './private-server.service';
 import { CustodyKeysBridgeTopicSubscribe } from 'src/libs/decorators/rabbit-topic-subscribe.decorator';
 import { mobileKey } from 'rox-custody_common-modules/libs/interfaces/push-key-to-mobile.interface';
 import { CurrentAdmin } from 'src/libs/decorators/current-admin.decorator';
-import { IAdminRequest } from 'src/libs/interfaces/admin-requrest.interface';
+import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
+import { RpcExceptionsFilter } from 'rox-custody_common-modules/libs/filters/RPCFilter.filter';
 
 @Controller('keys')
 export class PrivateServerController {
@@ -15,13 +16,14 @@ export class PrivateServerController {
   ) {}
 
   @MessagePattern({ cmd: _MessagePatterns.generateKey })
+  @UseFilters(RpcExceptionsFilter)
   async generateKey(@Payload() dto: GenerateKeyPairBridge) {
     return this.privateServerService.generateKeyPair(dto);
   }
 
   @Sse('updates')
   updates(
-    @CurrentAdmin() iAdmin: IAdminRequest
+    @CurrentAdmin() iAdmin: IBridgeAdminRequest
   ) {
     return this.privateServerService.keysUpdatesSSe(iAdmin);
   }
@@ -30,5 +32,6 @@ export class PrivateServerController {
   notifyAllMobileApprovals(@Payload() data: mobileKey) {
       this.privateServerService.pushDataToSSe(data)
   }
+
 
 }
