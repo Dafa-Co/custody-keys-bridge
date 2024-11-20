@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { IGenerateKeyPairResponse } from 'rox-custody_common-modules/libs/interfaces/generate-ket-pair.interface';
+import { ICustodyKeyPairResponse, IGenerateKeyPairResponse } from 'rox-custody_common-modules/libs/interfaces/generate-ket-pair.interface';
 import {
   _EventPatterns,
   _MessagePatterns,
@@ -15,8 +15,9 @@ import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { InjectCurrentCorporate } from 'src/libs/tenancy/inject-current-corporate';
 import { subDomainSource } from 'src/libs/tenancy/utils';
 import { mobileKey } from 'rox-custody_common-modules/libs/interfaces/push-key-to-mobile.interface';
-import { IAdminRequest } from 'src/libs/interfaces/admin-requrest.interface';
-import { OnEvent } from '@nestjs/event-emitter';
+import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
+import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
+import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 
 @TenantService()
 export class PrivateServerService {
@@ -26,12 +27,16 @@ export class PrivateServerService {
     @PrivateServerQueue() private readonly privateServerQueue: ClientProxy,
     private readonly amqpConnection: AmqpConnection,
     @InjectCurrentCorporate() private currentCorporate: subDomainSource,
+    private readonly backupStorageIntegrationService: BackupStorageIntegrationService
   ) {}
 
 
   async generateKeyPair(
     payload: GenerateKeyPairBridge,
-  ): Promise<IGenerateKeyPairResponse> {
+  ): Promise<ICustodyKeyPairResponse> {
+
+    const { apiApprovalEssential } = payload;
+
     const key = await firstValueFrom(
       this.privateServerQueue.send<IGenerateKeyPairResponse>(
         { cmd: _MessagePatterns.generateKey },
@@ -39,18 +44,36 @@ export class PrivateServerService {
       ),
     );
 
+
+    const storeIntoApiApprovalPayload: IRequestDataFromApiApproval = {
+      ...apiApprovalEssential,
+      data: {
+        key: key.HalfOfPrivateKey,
+        key_id: key.keyId,
+      }
+    };
+
+
+    // store the key to the Api Approval
+    await this.backupStorageIntegrationService.storeKeyToApiApproval(storeIntoApiApprovalPayload)
+
     // publish only if this is key for vault in the other cases it it will store the full key in the private server
     if(payload.vaultId) {
-
       this.BroadcastKey({
         content: key.HalfOfPrivateKey,
         keyId: key.keyId,
         vaultId: payload.vaultId
       })
-
     }
 
-    return key;
+
+    const custodyKey: ICustodyKeyPairResponse = {
+      address: key.address,
+      keyId: key.keyId
+    }
+
+
+    return custodyKey;
   }
 
 
@@ -69,7 +92,7 @@ export class PrivateServerService {
   }
 
   // SSE stream for key updates
-  keysUpdatesSSe(iAdmin: IAdminRequest) {
+  keysUpdatesSSe(iAdmin: IBridgeAdminRequest) {
 
     return new Observable((observer) => {
       // Subscribe to key updates

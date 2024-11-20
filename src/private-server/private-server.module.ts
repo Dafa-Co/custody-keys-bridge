@@ -5,6 +5,7 @@ import { RmqModule, RmqServiceServices } from 'src/libs/rmq/rmq.module';
 import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from 'src/libs/constant/constant';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { configs } from 'src/configs/configs';
+import { BackupStorageIntegrationModule } from 'src/backup-storage-integration/backup-storage-integration.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { configs } from 'src/configs/configs';
         timeout: 60000,
       },
     }),
+    BackupStorageIntegrationModule
   ],
   controllers: [PrivateServerController],
   providers: [PrivateServerService]

@@ -3,8 +3,9 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 export const configs = {
+    // general
+    NODE_ENV: process.env.NODE_ENV,
     PORT: process.env.PORT,
-
 
     // RMQ
     RABBITMQ_URL: process.env.RABBITMQ_URL,

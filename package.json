@@ -20,6 +20,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@biconomy/account": "^4.5.7",
     "@golevelup/nestjs-rabbitmq": "^5.5.0",
     "@nestjs/axios": "^3.0.3",
     "@nestjs/class-validator": "^0.13.4",

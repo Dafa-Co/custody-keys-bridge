@@ -13,6 +13,8 @@ import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { configs } from './configs/configs';
 import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from './libs/constant/constant';
 import { PrivateServerModule } from './private-server/private-server.module';
+import { TransactionsModule } from './transactions/transactions.module';
+import { BackupStorageIntegrationModule } from './backup-storage-integration/backup-storage-integration.module';
 
 @Module({
   imports: [
@@ -45,7 +47,9 @@ import { PrivateServerModule } from './private-server/private-server.module';
         heartbeatIntervalInSeconds: 60,
       },
     }),
-    PrivateServerModule
+    PrivateServerModule,
+    TransactionsModule,
+    BackupStorageIntegrationModule
   ],
   controllers: [],
   providers: [
