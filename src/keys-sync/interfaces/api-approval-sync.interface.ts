@@ -1,8 +1,8 @@
-import { ISyncRequestBridgeResponse } from "./sync-request-bridge.interface";
+import { IRequestDataFromApiApproval } from "rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface";
 
 export interface IApiApprovalSyncDto {
     apiApprovalData: IApiApprovalSyncInterface
-    syncData: ISyncRequestBridgeResponse;
+    syncData: IRequestDataFromApiApproval;
 }
 
 
