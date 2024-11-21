@@ -31,8 +31,6 @@ async function bootstrap() {
 
   server.useGlobalPipes(new RemoveNullKeysPipe());
 
-  server.useGlobalPipes(new TrimPipe());
-
   const validationOptions: ValidationPipeOptions = {
     whitelist: true,
     stopAtFirstError: true,
