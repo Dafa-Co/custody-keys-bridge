@@ -17,6 +17,7 @@ import { firstValueFrom } from 'rxjs';
 import { CustodySignedTransaction } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
 import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
+import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -101,13 +102,12 @@ export class TransactionsService {
   ): Promise<CustodySignedTransaction> {
     const { signTransaction, requestFromApiApproval } = dto;
 
-    requestFromApiApproval.data = {
-      key_id: signTransaction.keyId,
-    };
-
     let secondHalf = requestFromApiApproval
       ? await this.backupStorageIntegrationService.getKeyFromApiApproval(
-          requestFromApiApproval,
+          this.getRequestFromApiApprovalData(
+            requestFromApiApproval,
+            signTransaction.keyId,
+          ),
         )
       : '';
 
@@ -119,5 +119,16 @@ export class TransactionsService {
     return this.getSignedTransactionFromPrivateServer(
       privateServerSignTransaction,
     );
+  }
+
+  getRequestFromApiApprovalData(
+    requestFromApiApproval: IRequestDataFromApiApproval,
+    keyId: number,
+  ): IRequestDataFromApiApproval {
+    requestFromApiApproval.data = {
+      key_id: keyId,
+    };
+
+    return requestFromApiApproval;
   }
 }
