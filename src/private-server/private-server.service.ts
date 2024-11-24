@@ -44,21 +44,21 @@ export class PrivateServerService {
       ),
     );
 
-
-    const storeIntoApiApprovalPayload: IRequestDataFromApiApproval = {
-      ...apiApprovalEssential,
-      data: {
-        key: key.HalfOfPrivateKey,
-        key_id: key.keyId,
-      }
-    };
-
-
-    // store the key to the Api Approval
-    await this.backupStorageIntegrationService.storeKeyToApiApproval(storeIntoApiApprovalPayload)
-
     // publish only if this is key for vault in the other cases it it will store the full key in the private server
     if(payload.vaultId) {
+
+      const storeIntoApiApprovalPayload: IRequestDataFromApiApproval = {
+        ...apiApprovalEssential,
+        data: {
+          key: key.HalfOfPrivateKey,
+          key_id: key.keyId,
+        }
+      };
+
+
+      // store the key to the Api Approval
+      await this.backupStorageIntegrationService.storeKeyToApiApproval(storeIntoApiApprovalPayload)
+
       this.BroadcastKey({
         content: key.HalfOfPrivateKey,
         keyId: key.keyId,
