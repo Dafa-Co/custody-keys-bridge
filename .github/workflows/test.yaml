@@ -23,7 +23,7 @@ jobs:
 
            git pull --recurse-submodules
            cd rox-custody_common-modules
-           git checkout dev
+           git checkout test
            git pull
            cd ..
 
