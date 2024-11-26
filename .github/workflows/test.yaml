@@ -20,7 +20,13 @@ jobs:
         chmod 600 private_key
          ssh -i private_key  -o StrictHostKeyChecking=no  $USER@$HOST  "
            cd /root/test/custody-keys-bridge
+
+           git pull --recurse-submodules
+           cd rox-custody_common-modules
+           git checkout dev
            git pull
+           cd ..
+
            docker build -t $container_name .
            docker rm -f $container_name
            docker run -d -p 4021:3003 --name=$container_name --restart=unless-stopped  $container_name "
