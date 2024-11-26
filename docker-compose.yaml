@@ -4,6 +4,7 @@ services:
     env_file: .env
     volumes:
       - .:/usr/src/app
+    scale: 1
     networks:
       - custody_global_network
 
@@ -24,4 +25,3 @@ services:
 networks:
   custody_global_network:
     external: true
-    name: services_custody_global_network
