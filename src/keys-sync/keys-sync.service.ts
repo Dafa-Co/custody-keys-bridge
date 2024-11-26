@@ -1,20 +1,17 @@
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import { SyncRequestDto } from './dto/sync-request.dto';
-import { ISyncRequestBridge, ISyncRequestBridgeResponse } from './interfaces/sync-request-bridge.interface';
-import { routingKeys } from 'src/libs/microservices/constant';
-import { TENANT_CONNECTION } from 'src/libs/tenancy/utils';
+import { ISyncRequestBridge } from '../../rox-custody_common-modules/libs/interfaces/sync-request-bridge.interface';
+import { IRequestDataFromApiApproval } from "rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface";
 import { Inject, UnprocessableEntityException } from '@nestjs/common';
-import { DataSource, Repository } from 'typeorm';
-import { SyncRequest } from './entities/sync-request.entity';
-import { FilterInterface } from 'src/libs/api-feature/filter.interface';
-import { applyQueryBuilderOptions } from 'src/libs/api-feature/apply-query-options';
+import { DataSource } from 'typeorm';
 import { IApiApprovalSyncDto } from './interfaces/api-approval-sync.interface';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { VerifyKeyHeader } from 'src/libs/constant/api-approval-constant';
 import { AxiosResponse } from 'axios';
 import { Response } from 'express';
+import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
 
 @TenantService()
 export class KeysSyncService {
@@ -22,7 +19,6 @@ export class KeysSyncService {
 
     constructor(
         private readonly contextRabbitMQService: ContextualRabbitMQService,
-        @Inject(TENANT_CONNECTION) private readonly dataSource: DataSource,
         private readonly httpService: HttpService,
     ) {
     }
@@ -34,8 +30,8 @@ export class KeysSyncService {
             admin: admin,
             vaultId: vaultId
         }
-        const data = await this.contextRabbitMQService.requestDataFromCustody<ISyncRequestBridgeResponse>(
-            routingKeys.messagePatterns.custodySolution.syncRequest,
+        const data = await this.contextRabbitMQService.requestDataFromCustody<IRequestDataFromApiApproval>(
+            _MessagePatterns.bridge.syncRequest,
             payload
         )
 
