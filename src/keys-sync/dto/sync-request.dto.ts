@@ -2,7 +2,7 @@ import { IsNotEmpty, IsString } from "class-validator";
 import { IsId } from "src/libs/decorators/is-id.decorator";
 import { IsValidPublicKey } from "src/libs/decorators/is-public-key.decorator";
 import { IsSelectAllArray } from "src/libs/decorators/select-all.decorator";
-import { IAdminRequest } from "src/libs/interfaces/admin-requrest.interface";
+import { IBridgeAdminRequest } from "rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface";
 
 export class SyncRequestDto {
     @IsId()
@@ -17,6 +17,5 @@ export class SyncRequestDto {
     keysIds: number[];
 
     // from decorators
-    subdomain: string;
-    admin: IAdminRequest
+    admin: IBridgeAdminRequest
 }

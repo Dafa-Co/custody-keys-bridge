@@ -1,9 +1,5 @@
 # base stage to have npm installed
-FROM node:22-slim
-
-# development stage
-ARG NODE_ENV=development
-ENV NODE_ENV=${NODE_ENV}
+FROM node:20-alpine3.18
 
 WORKDIR /usr/src/app
 
