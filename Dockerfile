@@ -55,9 +55,6 @@ RUN npm install --only=production
 # Copy the build artifacts from the builder stage
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Copy any necessary configuration files
-COPY .env ./
-
 # Expose the application port
 EXPOSE 3000
 
