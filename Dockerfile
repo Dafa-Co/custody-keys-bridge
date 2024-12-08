@@ -42,12 +42,6 @@ FROM node:22 AS production
 # Set the working directory
 WORKDIR /usr/src/app
 
-# Install Chromium for headless browser functionality
-RUN apt-get update && apt-get install -y \
-  chromium \
-  --no-install-recommends && \
-  rm -rf /var/lib/apt/lists/*
-
 # Install only production dependencies
 COPY package*.json ./
 RUN npm install --only=production
