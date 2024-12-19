@@ -62,6 +62,7 @@ async function bootstrap() {
       queueOptions: {
         durable: true, // Make sure that the queue is durable
       },
+      persistent: true,
     },
   });
 
@@ -71,3 +72,5 @@ async function bootstrap() {
   console.log(`Server is running on: ${await server.getUrl()}`);
 }
 bootstrap();
+
+

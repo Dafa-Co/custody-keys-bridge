@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { KeyNotFoundInSCM } from 'rox-custody_common-modules/libs/custom-errors/key-not-found-in-scm.exception';
 import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { firstValueFrom } from 'rxjs';
@@ -36,7 +37,12 @@ export class BackupStorageIntegrationService {
       );
       return response.data;
     } catch (error) {
-      console.log("error", error.response.data)
+
+      // if the status code is 404, that mean the key is not found in the api approval
+      if (error?.response?.data.message === 'File not found') {
+        throw new KeyNotFoundInSCM();
+      }
+
       throw new SCMNotConnection();
     }
   }

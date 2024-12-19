@@ -1,6 +1,8 @@
 services:
   bridge_backend:
-    build: .
+    build:
+      context: .
+      target: development
     env_file: .env
     volumes:
       - .:/usr/src/app
