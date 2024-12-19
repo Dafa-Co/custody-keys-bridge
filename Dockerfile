@@ -1,16 +1,59 @@
-# base stage to have npm installed
-FROM node:20-alpine3.18
+# Stage 1: Build stage
+FROM node:22 AS builder
 
+# Set the working directory
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json (if available)
+# Copy package files and install dependencies
 COPY package*.json ./
-
-# Install NPM packages
 RUN npm install
 
-# Copy the local code to the container's workspace.
+# Copy the rest of the application code
 COPY . .
 
-# Command to run the application
+# Build the application
+RUN npm run build
+
+# Stage 2: Development stage
+FROM node:22 AS development
+
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Copy package files and install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy the application code
+COPY . .
+
+# Expose the application port
+EXPOSE 3000
+
+# Install global dependencies for development
+RUN npm install -g @nestjs/cli
+
+# Default command for development
 CMD ["npm", "run", "start:dev"]
+
+# Stage 3: Production stage (default)
+FROM node:22 AS production
+
+# Set the working directory
+WORKDIR /usr/src/app
+
+# Install only production dependencies
+COPY package*.json ./
+RUN npm install --only=production
+
+# Copy the environment file
+COPY .env ./
+
+# Copy the build artifacts from the builder stage
+COPY --from=builder /usr/src/app/dist ./dist
+
+# Expose the application port
+EXPOSE 3000
+
+# Default command
+CMD ["node", "dist/src/main"]

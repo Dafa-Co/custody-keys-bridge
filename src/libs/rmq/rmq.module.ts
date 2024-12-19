@@ -23,6 +23,7 @@ export class RmqModule {
             queueOptions: {
               durable: true,
             },
+            persistent: true,
           },
         });
       },
