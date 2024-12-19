@@ -105,7 +105,7 @@ export class PrivateServerService {
         if(
           iAdmin.vaultIds.includes(vaultId)
         ) {
-          observer.next({ data: newKey });
+          observer.next({ data: [newKey] });
         }
       });
 
