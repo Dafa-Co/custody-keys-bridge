@@ -10,7 +10,6 @@ import { firstValueFrom, Observable, Subject } from 'rxjs';
 import { GenerateKeyPairBridge } from 'rox-custody_common-modules/libs/interfaces/generate-key.interface';
 import { PrivateServerQueue } from 'src/libs/rmq/private-server.decorator';
 import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
-import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from 'src/libs/constant/constant';
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { InjectCurrentCorporate } from 'src/libs/tenancy/inject-current-corporate';
 import { subDomainSource } from 'src/libs/tenancy/utils';
@@ -18,6 +17,9 @@ import { mobileKey } from 'rox-custody_common-modules/libs/interfaces/push-key-t
 import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
+import { configs } from 'src/configs/configs';
+import { OnEvent } from '@nestjs/event-emitter';
+import { KeysBridgeEvents } from 'src/libs/constant/events';
 
 @TenantService()
 export class PrivateServerService {
@@ -76,12 +78,16 @@ export class PrivateServerService {
     return custodyKey;
   }
 
+  @OnEvent(KeysBridgeEvents.mobileKey)
+  handleMobileKeyEvent(data: mobileKey) {
+    this.pushDataToSSe(data);
+  }
 
   BroadcastKey(dto: mobileKey) {
     dto[DBIdentifierRMQ] = this.currentCorporate.subdomain;
 
     // Notify other containers about the new keys
-    this.amqpConnection.publish(RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE, '', dto);
+    this.amqpConnection.publish(configs.RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE, '', dto);
 
     this.pushDataToSSe(dto);
   }

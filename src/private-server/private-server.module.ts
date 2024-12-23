@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { PrivateServerController } from './private-server.controller';
 import { PrivateServerService } from './private-server.service';
 import { RmqModule, RmqServiceServices } from 'src/libs/rmq/rmq.module';
-import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from 'src/libs/constant/constant';
 import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { configs } from 'src/configs/configs';
 import { BackupStorageIntegrationModule } from 'src/backup-storage-integration/backup-storage-integration.module';
+import { PrivateServerRMQSubscriberController } from './private-server.rmq.subscriber.controller';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import { BackupStorageIntegrationModule } from 'src/backup-storage-integration/b
     RabbitMQModule.forRoot(RabbitMQModule, {
       exchanges: [
         {
-          name: RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE,
+          name: configs.RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE,
           type: 'fanout',
         },
       ],
@@ -23,10 +23,14 @@ import { BackupStorageIntegrationModule } from 'src/backup-storage-integration/b
         reject: false,
         timeout: 60000,
       },
+      connectionManagerOptions: {
+        reconnectTimeInSeconds: 10,
+        heartbeatIntervalInSeconds: 60,
+      },
     }),
     BackupStorageIntegrationModule
   ],
   controllers: [PrivateServerController],
-  providers: [PrivateServerService]
+  providers: [PrivateServerService, PrivateServerRMQSubscriberController]
 })
 export class PrivateServerModule {}

@@ -9,9 +9,6 @@ import { TenancyModule } from './libs/tenancy/tenancy.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/verify-access-token.guard';
 import { KeysSyncModule } from './keys-sync/keys-sync.module';
-import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
-import { configs } from './configs/configs';
-import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from './libs/constant/constant';
 import { PrivateServerModule } from './private-server/private-server.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BackupStorageIntegrationModule } from './backup-storage-integration/backup-storage-integration.module';
@@ -29,25 +26,6 @@ import { BackupStorageIntegrationModule } from './backup-storage-integration/bac
     TypeOrmModule.forRoot(databaseConfig),
     AuthModule,
     KeysSyncModule,
-    RabbitMQModule.forRoot(RabbitMQModule, {
-      exchanges: [
-        {
-          name: RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE,
-          type: 'fanout',
-        }
-      ],
-      uri: [configs.RABBITMQ_URL],
-      connectionInitOptions: {
-        wait: false,
-        reject: false,
-        timeout: 60000,
-      },
-      enableControllerDiscovery: true,
-      connectionManagerOptions: {
-        reconnectTimeInSeconds: 10,
-        heartbeatIntervalInSeconds: 60,
-      },
-    }),
     PrivateServerModule,
     TransactionsModule,
     BackupStorageIntegrationModule
