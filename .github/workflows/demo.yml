@@ -1,0 +1,28 @@
+name: Deploy to demo-server 
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Deploy to demo
+      env:
+        PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY_2}}
+        HOST: 49.13.230.22
+        USER: root
+      run: |
+        echo "$PRIVATE_KEY" > private_key 
+        chmod 600 private_key
+         ssh -i private_key   -o StrictHostKeyChecking=no  $USER@$HOST  " 
+         cd /root/demo/custody-keys-bridge
+         git pull --recurse-submodules
+         cd rox-custody_common-modules       
+         git pull
+         cd ..
+         docker build -t demo-custody-keys-bridge .
+         docker rm -f demo-custody-keys-bridge
+         docker run -d -p 6002:3003 --name=demo-custody-keys-bridge --restart=unless-stopped   demo-custody-keys-bridge "
