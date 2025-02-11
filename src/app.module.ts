@@ -14,6 +14,7 @@ import { TransactionsModule } from './transactions/transactions.module';
 import { BackupStorageIntegrationModule } from './backup-storage-integration/backup-storage-integration.module';
 import { RmqHelperQueuesInitializerModule } from 'rox-custody_common-modules/libs/services/rmq-helper-queues-initializer/rmq-helper-queues-initializer.module';
 import { configs } from './configs/configs';
+import { CustodyLoggerModule } from 'rox-custody_common-modules/libs/services/logger/custody-logger.module';
 
 
 @Module({
@@ -34,7 +35,8 @@ import { configs } from './configs/configs';
     RmqHelperQueuesInitializerModule.register(
       configs.RABBITMQ_URL,
       [configs.RABBITMQ_CUSTODY_BRIDGE_QUEUE_NAME]
-    )
+    ),
+    CustodyLoggerModule,
   ],
   controllers: [],
   providers: [

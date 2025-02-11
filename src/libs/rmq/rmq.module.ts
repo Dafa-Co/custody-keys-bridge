@@ -1,6 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { ClientProxyFactory, ClientsModule, Transport } from '@nestjs/microservices';
-import { getQueueOptions } from 'rox-custody_common-modules/libs/config/rmq.config';
+import { getConsumerConfig, getPublisherConfig } from 'rox-custody_common-modules/libs/config/rmq.config';
 import { configs } from 'src/configs/configs';
 
 export enum RmqServiceServices {
@@ -17,10 +17,9 @@ export class RmqModule {
       useFactory: () => {
         const { queueName, serviceName } = this.getQueueConfig(service);
         return ClientProxyFactory.create(
-          getQueueOptions({
+          getPublisherConfig({
             clusterUrl: configs.RABBITMQ_URL,
             queueName: queueName,
-            noAck: true,
           })
         );
       },
