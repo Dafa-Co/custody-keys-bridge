@@ -5,18 +5,16 @@ import { GenerateKeyPairBridge } from 'rox-custody_common-modules/libs/interface
 import { PrivateServerService } from './private-server.service';
 import { CurrentAdmin } from 'src/libs/decorators/current-admin.decorator';
 import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
+import { RmqController } from 'rox-custody_common-modules/libs/decorators/rmq-controller.decorator';
 
-@Controller('keys')
-export class PrivateServerController {
+@RmqController()
+export class PrivateServerRmqController {
   constructor(
     private privateServerService: PrivateServerService,
   ) { }
 
-  @Sse('updates')
-  updates(
-    @CurrentAdmin() iAdmin: IBridgeAdminRequest
-  ) {
-    return this.privateServerService.keysUpdatesSSe(iAdmin);
+  @MessagePattern({ cmd: _MessagePatterns.generateKey })
+  async generateKey(@Payload() dto: GenerateKeyPairBridge) {
+    return this.privateServerService.generateKeyPair(dto);
   }
-
 }

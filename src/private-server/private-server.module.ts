@@ -6,6 +6,7 @@ import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
 import { configs } from 'src/configs/configs';
 import { BackupStorageIntegrationModule } from 'src/backup-storage-integration/backup-storage-integration.module';
 import { PrivateServerRMQSubscriberController } from './private-server.rmq.subscriber.controller';
+import { PrivateServerRmqController } from './private-server.rmq.controller';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { PrivateServerRMQSubscriberController } from './private-server.rmq.subsc
     }),
     BackupStorageIntegrationModule
   ],
-  controllers: [PrivateServerController],
+  controllers: [PrivateServerController, PrivateServerRmqController],
   providers: [PrivateServerService, PrivateServerRMQSubscriberController]
 })
-export class PrivateServerModule {}
+export class PrivateServerModule { }
