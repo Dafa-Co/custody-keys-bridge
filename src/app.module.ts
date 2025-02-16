@@ -9,12 +9,12 @@ import { TenancyModule } from './libs/tenancy/tenancy.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/verify-access-token.guard';
 import { KeysSyncModule } from './keys-sync/keys-sync.module';
-import { RabbitMQModule } from '@golevelup/nestjs-rabbitmq';
-import { configs } from './configs/configs';
-import { RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE } from './libs/constant/constant';
 import { PrivateServerModule } from './private-server/private-server.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BackupStorageIntegrationModule } from './backup-storage-integration/backup-storage-integration.module';
+import { RmqHelperQueuesInitializerModule } from 'rox-custody_common-modules/libs/services/rmq-helper-queues-initializer/rmq-helper-queues-initializer.module';
+import { configs } from './configs/configs';
+import { CustodyLoggerModule } from 'rox-custody_common-modules/libs/services/logger/custody-logger.module';
 
 
 @Module({
@@ -29,28 +29,14 @@ import { BackupStorageIntegrationModule } from './backup-storage-integration/bac
     TypeOrmModule.forRoot(databaseConfig),
     AuthModule,
     KeysSyncModule,
-    RabbitMQModule.forRoot(RabbitMQModule, {
-      exchanges: [
-        {
-          name: RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE,
-          type: 'fanout',
-        }
-      ],
-      uri: [configs.RABBITMQ_URL],
-      connectionInitOptions: {
-        wait: false,
-        reject: false,
-        timeout: 60000,
-      },
-      enableControllerDiscovery: true,
-      connectionManagerOptions: {
-        reconnectTimeInSeconds: 10,
-        heartbeatIntervalInSeconds: 60,
-      },
-    }),
     PrivateServerModule,
     TransactionsModule,
-    BackupStorageIntegrationModule
+    BackupStorageIntegrationModule,
+    RmqHelperQueuesInitializerModule.register(
+      configs.RABBITMQ_URL,
+      [configs.RABBITMQ_CUSTODY_BRIDGE_QUEUE_NAME]
+    ),
+    CustodyLoggerModule,
   ],
   controllers: [],
   providers: [
@@ -62,4 +48,4 @@ import { BackupStorageIntegrationModule } from './backup-storage-integration/bac
   ],
 })
 
-export class AppModule {}
+export class AppModule { }

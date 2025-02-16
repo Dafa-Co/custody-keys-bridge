@@ -12,6 +12,7 @@ import { validationFirstLabel } from './libs/decorators/validate-first.decorator
 import { RmqOptions, Transport } from '@nestjs/microservices';
 import { ContextIdFactory } from '@nestjs/core';
 import { AggregateByTenantContextIdStrategy } from './libs/tenancy/aggregate-by-tenant-context-id-strategy';
+import { getConsumerConfig } from 'rox-custody_common-modules/libs/config/rmq.config';
 
 
 async function bootstrap() {
@@ -54,17 +55,12 @@ async function bootstrap() {
 
 
   // Create RabbitMQ microservice
-  server.connectMicroservice<RmqOptions>({
-    transport: Transport.RMQ, // Set transport to RabbitMQ
-    options: {
-      urls: [configs.RABBITMQ_URL], // RabbitMQ connection URL
-      queue: configs.RABBITMQ_CUSTODY_BRIDGE_QUEUE_NAME, // Queue name
-      queueOptions: {
-        durable: true, // Make sure that the queue is durable
-      },
-      persistent: true,
-    },
-  });
+  server.connectMicroservice<RmqOptions>(
+    getConsumerConfig({
+      clusterUrl: configs.RABBITMQ_URL,
+      queueName: configs.RABBITMQ_CUSTODY_BRIDGE_QUEUE_NAME,
+    })
+  );
 
   await server.startAllMicroservices();
 
