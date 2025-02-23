@@ -11,16 +11,12 @@ import {
 
 @Catch()
 export class HttpErrorFilter implements ExceptionFilter {
-  private readonly logger: Logger;
   constructor() {
-    this.logger = new Logger();
   }
   catch(exception: HttpException, host: ArgumentsHost): any {
     const ctx = host.switchToHttp();
     const request = ctx.getRequest();
     const response = ctx.getResponse();
-
-    console.log(exception);
 
     if((exception as any).error){
       response.status((exception as any).error.statusCode).json({
@@ -62,11 +58,6 @@ export class HttpErrorFilter implements ExceptionFilter {
         ? devErrorResponse
         : prodErrorResponse;
 
-
-    this.logger.log(
-      `request method: ${request.method} request url${request.url}`,
-      JSON.stringify(responseData),
-    );
 
     const errors = exception instanceof HttpException
     ? exception['response']: { error: 'internal server error'} ;
