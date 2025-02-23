@@ -19,8 +19,10 @@ jobs:
         chmod 600 private_key
          ssh -i private_key   -o StrictHostKeyChecking=no  $USER@$HOST  " 
          cd /root/demo/custody-keys-bridge
-         git pull --recurse-submodules
+         git checkout main
+         git pull
          cd rox-custody_common-modules       
+         git checkout main
          git pull
          cd ..
          docker build -t demo-custody-keys-bridge .
