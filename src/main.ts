@@ -13,12 +13,16 @@ import { RmqOptions, Transport } from '@nestjs/microservices';
 import { ContextIdFactory } from '@nestjs/core';
 import { AggregateByTenantContextIdStrategy } from './libs/tenancy/aggregate-by-tenant-context-id-strategy';
 import { getConsumerConfig } from 'rox-custody_common-modules/libs/config/rmq.config';
+import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
 
 
 async function bootstrap() {
   const server = await NestFactory.create(AppModule, {
     forceCloseConnections: true,
   });
+  const logger = server.get(CustodyLogger);
+
+  server.useLogger(logger);
 
   // Register tenant-based context strategy
   ContextIdFactory.apply(new AggregateByTenantContextIdStrategy());
@@ -65,7 +69,7 @@ async function bootstrap() {
   await server.startAllMicroservices();
 
   await server.listen(configs.PORT, '0.0.0.0');
-  console.log(`Server is running on: ${await server.getUrl()}`);
+  logger.log(`Server is running on: ${await server.getUrl()}`);
 }
 bootstrap();
 
