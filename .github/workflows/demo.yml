@@ -25,4 +25,4 @@ jobs:
          cd ..
          docker build -t demo-custody-keys-bridge .
          docker rm -f demo-custody-keys-bridge
-         docker run -d -p 6002:3003 --name=demo-custody-keys-bridge --restart=unless-stopped   demo-custody-keys-bridge "
+         docker run -d -p 6002:3003 --name=demo-custody-keys-bridge --log-driver=fluentd --log-opt fluentd-address=localhost:24224 --restart=unless-stopped   demo-custody-keys-bridge "

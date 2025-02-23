@@ -18,6 +18,7 @@ import { CustodySignedTransaction } from 'rox-custody_common-modules/libs/interf
 import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
+import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
 
 @TenantService()
 export class TransactionsService {
@@ -25,6 +26,7 @@ export class TransactionsService {
     private readonly contextRabbitMQService: ContextualRabbitMQService,
     @PrivateServerQueue() private readonly privateServerQueue: ClientProxy,
     private readonly backupStorageIntegrationService: BackupStorageIntegrationService,
+    private readonly logger: CustodyLogger,
   ) {}
 
   async takeAction(
@@ -76,7 +78,10 @@ export class TransactionsService {
         privateServerSignTransaction,
       );
     } catch (error) {
-      console.log('errowaerr', error);
+      // console.log('errowaerr', error);
+      this.logger.error(`Error in broadcastTransaction: ${error?.message}`, {
+        stack: error?.stack,
+      });
       signedTransaction.error = error;
     }
 
