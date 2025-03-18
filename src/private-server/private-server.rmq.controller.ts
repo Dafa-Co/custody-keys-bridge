@@ -1,10 +1,7 @@
-import { Controller, Sse, UseFilters } from '@nestjs/common';
-import { ClientProxy, EventPattern, MessagePattern, Payload, RpcException } from '@nestjs/microservices';
+import { ClientProxy, EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { _EventPatterns, _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
 import { GenerateKeyPairBridge } from 'rox-custody_common-modules/libs/interfaces/generate-key.interface';
 import { PrivateServerService } from './private-server.service';
-import { CurrentAdmin } from 'src/libs/decorators/current-admin.decorator';
-import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
 import { RmqController } from 'rox-custody_common-modules/libs/decorators/rmq-controller.decorator';
 import { PrivateServerQueue } from 'src/libs/rmq/private-server.decorator';
 

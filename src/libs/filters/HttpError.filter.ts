@@ -5,8 +5,6 @@ import {
   ExceptionFilter,
   HttpException,
   HttpStatus,
-  InternalServerErrorException,
-  Logger,
 } from '@nestjs/common';
 
 @Catch()

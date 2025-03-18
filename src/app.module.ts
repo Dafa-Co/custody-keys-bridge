@@ -8,7 +8,6 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TenancyModule } from './libs/tenancy/tenancy.module';
 import { APP_GUARD } from '@nestjs/core';
 import { AccessTokenGuard } from './auth/guards/verify-access-token.guard';
-import { KeysSyncModule } from './keys-sync/keys-sync.module';
 import { PrivateServerModule } from './private-server/private-server.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BackupStorageIntegrationModule } from './backup-storage-integration/backup-storage-integration.module';
@@ -28,7 +27,6 @@ import { CustodyLoggerModule } from 'rox-custody_common-modules/libs/services/lo
     }),
     TypeOrmModule.forRoot(databaseConfig),
     AuthModule,
-    KeysSyncModule,
     PrivateServerModule,
     TransactionsModule,
     BackupStorageIntegrationModule,
