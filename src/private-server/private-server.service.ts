@@ -9,17 +9,10 @@ import {
 import { firstValueFrom, Observable, Subject } from 'rxjs';
 import { GenerateKeyPairBridge } from 'rox-custody_common-modules/libs/interfaces/generate-key.interface';
 import { PrivateServerQueue } from 'src/libs/rmq/private-server.decorator';
-import { AmqpConnection } from '@golevelup/nestjs-rabbitmq';
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
-import { InjectCurrentCorporate } from 'src/libs/tenancy/inject-current-corporate';
-import { subDomainSource } from 'src/libs/tenancy/utils';
 import { mobileKey } from 'rox-custody_common-modules/libs/interfaces/push-key-to-mobile.interface';
-import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
-import { configs } from 'src/configs/configs';
-import { OnEvent } from '@nestjs/event-emitter';
-import { KeysBridgeEvents } from 'src/libs/constant/events';
 
 @TenantService()
 export class PrivateServerService {
@@ -27,8 +20,6 @@ export class PrivateServerService {
 
   constructor(
     @PrivateServerQueue() private readonly privateServerQueue: ClientProxy,
-    private readonly amqpConnection: AmqpConnection,
-    @InjectCurrentCorporate() private currentCorporate: subDomainSource,
     private readonly backupStorageIntegrationService: BackupStorageIntegrationService
   ) {}
 
@@ -48,7 +39,6 @@ export class PrivateServerService {
 
     // publish only if this is key for vault in the other cases it it will store the full key in the private server
     if(payload.vaultId) {
-
       const storeIntoApiApprovalPayload: IRequestDataFromApiApproval = {
         ...apiApprovalEssential,
         data: {
@@ -57,75 +47,15 @@ export class PrivateServerService {
         }
       };
 
-
       // store the key to the Api Approval
       await this.backupStorageIntegrationService.storeKeyToApiApproval(storeIntoApiApprovalPayload)
-
-      this.BroadcastKey({
-        content: key.HalfOfPrivateKey,
-        keyId: key.keyId,
-        vaultId: payload.vaultId
-      })
     }
-
 
     const custodyKey: ICustodyKeyPairResponse = {
       address: key.address,
       keyId: key.keyId
     }
 
-
     return custodyKey;
-  }
-
-  @OnEvent(KeysBridgeEvents.mobileKey)
-  handleMobileKeyEvent(data: mobileKey) {
-    this.pushDataToSSe(data);
-  }
-
-  BroadcastKey(dto: mobileKey) {
-    dto[DBIdentifierRMQ] = this.currentCorporate.subdomain;
-
-    // Notify other containers about the new keys
-    this.amqpConnection.publish(configs.RMQ_KEYS_BRIDGE_FANOUT_EXCHANGE, '', dto);
-
-    this.pushDataToSSe(dto);
-  }
-
-  pushDataToSSe(data: mobileKey) {
-    // Notify SSE subscribers about the new keys
-    this.keyUpdatesSubject.next(data);
-  }
-
-  // SSE stream for key updates
-  keysUpdatesSSe(iAdmin: IBridgeAdminRequest) {
-
-    return new Observable((observer) => {
-      // Subscribe to key updates
-      const subscription = this.keyUpdatesSubject.subscribe((newKey) => {
-
-        // validate this admin can receives this key
-        const { vaultId } = newKey;
-
-        // check the user have access for this corporate and the vault id inside the vault new keys
-        if(
-          iAdmin.vaultIds.includes(vaultId)
-        ) {
-          observer.next({ data: [newKey] });
-        }
-      });
-
-      // Send heartbeat every 10 seconds
-      const interval = setInterval(() => {
-        observer.next({ data: 'heartbeat' });
-      }, 10000);
-
-      // Cleanup on disconnect
-      return () => {
-        subscription.unsubscribe(); // Unsubscribe from updates
-        clearInterval(interval); // Clear heartbeat interval
-        observer.complete(); // Complete the observable
-      };
-    });
   }
 }
