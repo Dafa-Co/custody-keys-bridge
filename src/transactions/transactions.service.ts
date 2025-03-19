@@ -11,11 +11,15 @@ import { ProcessTakingAction } from 'rox-custody_common-modules/libs/interfaces/
 import { ClientProxy } from '@nestjs/microservices';
 import { PrivateServerQueue } from 'src/libs/rmq/private-server.decorator';
 import { firstValueFrom } from 'rxjs';
-import { CustodySignedTransaction } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
+import {
+  CustodySignedContractTransaction,
+  CustodySignedTransaction,
+} from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
 import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
+import { SignContractTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -58,6 +62,17 @@ export class TransactionsService {
 
     return this.getSignedTransactionFromPrivateServer(
       privateServerSignTransaction,
+    );
+  }
+
+  async signContractTransactionThroughBridge(
+    dto: SignContractTransactionDto,
+  ): Promise<CustodySignedContractTransaction> {
+    return await firstValueFrom(
+      this.privateServerQueue.send<CustodySignedContractTransaction>(
+        { cmd: _MessagePatterns.signContractTransaction },
+        dto,
+      ),
     );
   }
 
