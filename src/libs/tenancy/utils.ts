@@ -1,6 +1,5 @@
 import * as path from 'path';
 import { EventEmitterConstantName, HTTP, JOB, RabbitMQ } from 'rox-custody_common-modules/libs/utils/request-type-constants';
-import { SyncRequest } from 'src/keys-sync/entities/sync-request.entity';
 import { DataSource } from 'typeorm';
 import { DBIdentifierJOB, DBIdentifierRMQ } from 'rox-custody_common-modules/libs/utils/microservice-constants';
 import { GoneException } from '@nestjs/common';
@@ -55,7 +54,7 @@ export function createCorporateDataSource(
     type: 'sqlite',
     synchronize: true,
     database: databasePath,
-    entities: [SyncRequest],
+    entities: [],
   });
 }
 

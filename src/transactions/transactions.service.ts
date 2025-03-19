@@ -1,10 +1,7 @@
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
-import { CreateActionDto } from '../../rox-custody_common-modules/libs/dtos/create-action.dto';
-import { IBridgeAdminRequest } from 'rox-custody_common-modules/libs/interfaces/bridge-admin-requrest.interface';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import {
   PrivateServerSignTransactionDto,
-  SignTransactionDto,
 } from 'rox-custody_common-modules/libs/interfaces/sign-transaction.interface';
 import {
   _EventPatterns,
@@ -32,68 +29,6 @@ export class TransactionsService {
     private readonly backupStorageIntegrationService: BackupStorageIntegrationService,
     private readonly logger: CustodyLogger,
   ) {}
-
-  async takeAction(
-    approval: IBridgeAdminRequest,
-    createActionDto: CreateActionDto,
-  ) {
-    // send to custody to verify admin action
-
-    const processTakingActionPayload: ProcessTakingAction = {
-      approval,
-      createActionDto,
-    };
-
-    const signTransactionData =
-      await this.contextRabbitMQService.requestDataFromCustody<SignTransactionDto>(
-        _MessagePatterns.bridge.transactionAction,
-        processTakingActionPayload,
-      );
-
-    // if this return null that mean this action will not make the transaction change its status
-    if (signTransactionData) {
-      this.broadcastTransaction(
-        createActionDto.halfOfPrivateKey,
-        signTransactionData,
-      );
-    }
-
-    return 'action taken successfully';
-  }
-
-  async broadcastTransaction(
-    secondHalf: string,
-    signTransactionData: SignTransactionDto,
-  ) {
-    const privateServerSignTransaction: PrivateServerSignTransactionDto = {
-      ...signTransactionData,
-      secondHalf,
-    };
-
-    let signedTransaction: CustodySignedTransaction = {
-      signedTransaction: null,
-      bundlerUrl: null,
-      error: null,
-      transactionId: signTransactionData.transactionId,
-    };
-
-    try {
-      signedTransaction = await this.getSignedTransactionFromPrivateServer(
-        privateServerSignTransaction,
-      );
-    } catch (error) {
-      // console.log('errowaerr', error);
-      this.logger.error(`Error in broadcastTransaction: ${error?.message}`, {
-        stack: error?.stack,
-      });
-      signedTransaction.error = error;
-    }
-
-    await this.contextRabbitMQService.publishToCustody(
-      _EventPatterns.bridge.broadcastTransaction,
-      signedTransaction,
-    );
-  }
 
   private async getSignedTransactionFromPrivateServer(
     privateServerSignTransaction: PrivateServerSignTransactionDto,
