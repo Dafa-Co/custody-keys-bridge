@@ -70,9 +70,6 @@ async function bootstrap() {
   );
 
   await server.startAllMicroservices();
-
-  await server.listen(configs.PORT, '0.0.0.0');
-  logger.log(`Server is running on: ${await server.getUrl()}`);
 }
 bootstrap();
 
