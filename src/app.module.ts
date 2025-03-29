@@ -16,6 +16,7 @@ import { configs } from './configs/configs';
 import { CustodyLoggerModule } from 'rox-custody_common-modules/libs/services/logger/custody-logger.module';
 import { ormConfigs } from './configs/database';
 import { SecureCommunicationModule } from 'rox-custody_common-modules/libs/services/secure-communication/secure-communication.module';
+import { MailsModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -37,7 +38,8 @@ import { SecureCommunicationModule } from 'rox-custody_common-modules/libs/servi
       [configs.RABBITMQ_CUSTODY_BRIDGE_QUEUE_NAME]
     ),
     CustodyLoggerModule,
-    SecureCommunicationModule
+    SecureCommunicationModule,
+    MailsModule,
   ],
   controllers: [],
   providers: [

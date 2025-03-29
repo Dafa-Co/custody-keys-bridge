@@ -1,10 +1,9 @@
 import { HttpService } from '@nestjs/axios';
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyNotFoundInSCM } from 'rox-custody_common-modules/libs/custom-errors/key-not-found-in-scm.exception';
 import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
-import { generateKeyPair } from 'rox-custody_common-modules/libs/utils/generate-key-pair.utils';
 import { firstValueFrom } from 'rxjs';
 import { VerifyKeyHeader } from 'src/libs/constant/api-approval-constant';
 import { BackupStorage } from './entities/backup-storage.entity';
@@ -13,6 +12,11 @@ import { BackupStorageHandshakingDto } from 'rox-custody_common-modules/libs/dto
 import { GenerateBridgeScmDto } from 'rox-custody_common-modules/libs/dtos/generate-bridge-scm.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { bridgeHandshakingResponseDto } from 'rox-custody_common-modules/libs/dtos/bridge-handshaking-response.dto';
+import { BackupStorageCommunicationManagerService } from './backup-storage-communication-manager/backup-storage-communication-manager.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EmailEvents } from 'src/libs/constant/events.constants';
+import { ISendEmailEvent } from 'src/libs/dto/send-email-event.dto';
+import { MailStrategy } from 'src/mail/enums/mail-strategy.enum';
 
 @Injectable()
 export class BackupStorageIntegrationService {
@@ -20,6 +24,8 @@ export class BackupStorageIntegrationService {
     private readonly httpService: HttpService,
     @InjectRepository(BackupStorage)
     private backupStorageRepository: Repository<BackupStorage>,
+    private readonly backupStorageCommunicationManagerService: BackupStorageCommunicationManagerService,
+    private readonly eventEmitter: EventEmitter2,
   ) { }
 
   async storeKeyToApiApproval(dto: IRequestDataFromApiApproval): Promise<void> {
@@ -64,35 +70,7 @@ export class BackupStorageIntegrationService {
   async handshakeWithBackupStorage(
     handshakeData: BackupStorageHandshakingDto
   ): Promise<bridgeHandshakingResponseDto> {
-    const keys = await generateKeyPair();
-
-    const expirationAfterHour = new Date();
-    expirationAfterHour.setHours(expirationAfterHour.getHours() + 1);
-
-    const backupStorage = await this.backupStorageRepository.findOne({
-      where: { verifyKey: handshakeData.verifyKey },
-      select: ['id'],
-    });
-
-    if (!backupStorage) {
-      throw new ForbiddenException('Invalid verify key');
-    }
-
-    const updateResults = await this.backupStorageRepository.update(
-      { id: backupStorage.id, corporateId: handshakeData.corporateId },
-      {
-        backupStoragePublicKey: handshakeData.publicKey,
-        identityVerificationPrivateKey: keys.privateKey,
-        sessionExpirationDate: expirationAfterHour,
-        url: handshakeData.serverUrl,
-      }
-    );
-
-    if (updateResults.affected === 0) {
-      throw new ForbiddenException('Invalid verify key');
-    }
-
-    return { publicKey: keys.publicKey, id: backupStorage.id };
+    return this.backupStorageCommunicationManagerService.handshakeWithBackupStorage(handshakeData);
   }
 
   generateVerifyKey(): string {
@@ -100,12 +78,27 @@ export class BackupStorageIntegrationService {
   }
 
   async generateScm(dto: GenerateBridgeScmDto) {
-    const verifyKey = this.generateVerifyKey();
+    const verifyKey = this.generateVerifyKey()
 
     await this.backupStorageRepository.upsert({
       id: dto.id,
-      verifyKey,
       corporateId: dto.corporateId,
-    }, ['id']);
+    }, ['id'])
+
+    await this.backupStorageCommunicationManagerService.saveVerifyKey(verifyKey, dto.corporateId, dto.id);
+
+    const emailEvent: ISendEmailEvent<MailStrategy.VERIFY_KEY> = {
+      type: MailStrategy.VERIFY_KEY,
+      emails: dto.emails,
+      payload: {
+        name: dto.name,
+        verifyKey,
+      }
+    }
+
+    const results = this.eventEmitter.emit(
+      EmailEvents.sendEmail,
+      emailEvent,
+    )
   }
 }

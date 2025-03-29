@@ -25,4 +25,7 @@ export const envValidationSchema = Joi.object({
     DATABASE_PASSWORD: Joi.string().required(),
     DATABASE_PORT: JoiNumberCasting.required(),
 
+    // SendGrid configuration
+    SENDGRID_API_KEY: Joi.string().required(),
+    SENDGRID_EMAIL: Joi.string().email().required(),
 })

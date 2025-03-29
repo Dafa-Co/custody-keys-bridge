@@ -13,14 +13,11 @@ export class BackupStorageIntegrationRmqController {
     private readonly backupStorageIntegrationService: BackupStorageIntegrationService
   ) { }
 
-  // @MessagePattern({ cmd: _MessagePatterns.bridge.handshaking })
   @EncryptedMessagePattern({ cmd: _MessagePatterns.bridge.handshaking })
   async handshaking(
     @DecryptedPayload() dto: BackupStorageHandshakingDto
   ) {
-    console.log('handshaking dto:', dto);
-    return dto;
-    // return this.backupStorageIntegrationService.handshakeWithBackupStorage(dto);
+    return this.backupStorageIntegrationService.handshakeWithBackupStorage(dto);
   }
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.generateScm })
