@@ -13,12 +13,16 @@ import { backupStorageConnectionTypes, IRequestDataFromApiApproval } from 'rox-c
 import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { getApiApprovalUrl, getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-approval';
 import { configs } from 'src/configs/configs';
+import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
+import { cleanUpPrivateKeyDto } from 'rox-custody_common-modules/libs/dtos/clean-up-private-key.dto';
+import { BadRequestException } from '@nestjs/common';
 
 @TenantService()
 export class PrivateServerService {
   constructor(
     @PrivateServerQueue() private readonly privateServerQueue: ClientProxy,
-    private readonly backupStorageIntegrationService: BackupStorageIntegrationService
+    private readonly backupStorageIntegrationService: BackupStorageIntegrationService,
+    private readonly logger: CustodyLogger,
   ) { }
 
   private splitKeyForBackupStorages(
@@ -49,6 +53,25 @@ export class PrivateServerService {
     return backupStorageParts;
   }
 
+  private checkAllHaveActiveSessions(
+    backupStorages: { activeSessions: any[], id: number }[],
+  ) {
+    const backupStoragesWithNoActiveSession = backupStorages.filter(
+      (backupStorage) =>
+        !backupStorage.activeSessions || backupStorage.activeSessions.length === 0
+    );
+
+    if (backupStoragesWithNoActiveSession.length) {
+      throw new SCMNotConnection(
+        {
+          backupStoragesIds: backupStoragesWithNoActiveSession.map(
+            (backupStorage) => backupStorage.id
+          ),
+        }
+      );
+    }
+  }
+
   async generateKeyPair(
     payload: GenerateKeyPairBridge,
   ): Promise<ICustodyKeyPairResponse> {
@@ -68,61 +91,61 @@ export class PrivateServerService {
 
     // publish only if this is key for vault in the other cases it it will store the full key in the private server
     if (keysParts.length) {
-      const backupStorages = await this.backupStorageIntegrationService.getBackupStoragesInfo(
-        keysParts.map((keyPart) => keyPart.backupStorageId),
-        true,
-      );
+      try {
+        const backupStorages = await this.backupStorageIntegrationService.getBackupStoragesInfo(
+          keysParts.map((keyPart) => keyPart.backupStorageId),
+          true,
+        );
 
-      // Make sure all have an active session
-      const backupStoragesWithNoActiveSession = backupStorages.filter(
-        (backupStorage) =>
-          !backupStorage.activeSessions ||
-          backupStorage.activeSessions.length === 0
-      );
+        this.checkAllHaveActiveSessions(backupStorages);
 
-      if (backupStoragesWithNoActiveSession.length) {
-        throw new SCMNotConnection(
-          {
-            backupStoragesIds: backupStoragesWithNoActiveSession.map(
-              (backupStorage) => backupStorage.id
-            ),
-          }
+        // store the key to the Api Approval
+        await Promise.all(
+          keysParts.map(async ({ backupStorageId, privateKeySlice }, index) => {
+            const backupStorage = backupStorages.find(
+              (backupStorage) => backupStorage.id === backupStorageId
+            );
+
+            if (!backupStorage) {
+              throw new Error(`Backup storage with id ${backupStorageId} not found`);
+            }
+
+            const folderName = getEnvFolderName(
+              corporateId,
+              vaultId,
+              configs.NODE_ENV,
+            );
+
+            await this.backupStorageIntegrationService.storeKeyToApiApproval({
+              url: getApiApprovalUrl(
+                backupStorage.url,
+                backupStorageConnectionTypes.setKey,
+                folderName,
+              ),
+              sliceIndex: index,
+              privateKeySlice,
+              activeSessions: backupStorage.activeSessions.map(
+                (activeSession) => activeSession.sessionKey
+              ),
+              backupStorageId,
+              privateKeyId: key.keyId,
+            });
+          })
+        )
+      } catch (error) {
+        this.logger.error(
+          `Error while storing key to Api Approval: ${error.message}`,
+          { stack: error.stack },
+        );
+        const rollbackBody: cleanUpPrivateKeyDto = { keyId: key.keyId };
+        this.privateServerQueue.emit(
+          { cmd: _EventPatterns.rollbackKeyGeneration },
+          rollbackBody,
+        )
+        throw new BadRequestException(
+          'Error while storing key to Api Approval',
         );
       }
-
-      // store the key to the Api Approval
-      await Promise.all(
-        keysParts.map(async ({ backupStorageId, privateKeySlice }, index) => {
-          const backupStorage = backupStorages.find(
-            (backupStorage) => backupStorage.id === backupStorageId
-          );
-
-          if (!backupStorage) {
-            throw new Error(`Backup storage with id ${backupStorageId} not found`);
-          }
-
-          const folderName = getEnvFolderName(
-            corporateId,
-            vaultId,
-            configs.NODE_ENV,
-          );
-
-          await this.backupStorageIntegrationService.storeKeyToApiApproval({
-            url: getApiApprovalUrl(
-              backupStorage.url,
-              backupStorageConnectionTypes.setKey,
-              folderName,
-            ),
-            sliceIndex: index,
-            privateKeySlice,
-            activeSessions: backupStorage.activeSessions.map(
-              (activeSession) => activeSession.sessionKey
-            ),
-            backupStorageId,
-            privateKeyId: key.keyId,
-          });
-        })
-      )
     }
 
     return {
