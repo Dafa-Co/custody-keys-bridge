@@ -3,12 +3,15 @@ import { BackupStorageVerifyKey } from "../entities/backup-storage-verify-key.en
 import { EntityManager, Repository } from "typeorm";
 import { BackupStorageActiveSession } from "../entities/backup-storage-active-session.entity";
 import { v4 as uuidv4 } from 'uuid';
-import { REVOKE_VERIFY_KEY_AFTER } from "../constants/backup-storage.constants";
+import { MAX_NUMBER_OF_ACTIVE_SESSIONS, REVOKE_VERIFY_KEY_AFTER } from "../constants/backup-storage.constants";
 import { BackupStorageHandshakingDto } from "rox-custody_common-modules/libs/dtos/backup-storage-handshaking.dto";
 import { bridgeHandshakingResponseDto } from "rox-custody_common-modules/libs/dtos/bridge-handshaking-response.dto";
 import { ForbiddenException } from "@nestjs/common";
 import { SecureCommunicationService } from "rox-custody_common-modules/libs/services/secure-communication/secure-communication.service";
 import { BackupStorage } from "../entities/backup-storage.entity";
+import { decryptAES256, encryptAES256 } from "rox-custody_common-modules/libs/utils/encryption";
+import { firstValueFrom } from "rxjs";
+import { HttpService } from "@nestjs/axios";
 
 export class BackupStorageCommunicationManagerService {
     constructor(
@@ -18,6 +21,7 @@ export class BackupStorageCommunicationManagerService {
         private backupStorageActiveSessionRepository: Repository<BackupStorageActiveSession>,
         @InjectRepository(BackupStorage)
         private backupStorageRepository: Repository<BackupStorage>,
+        private readonly httpService: HttpService,
     ) { }
 
     generateVerifyKey(): string {
@@ -40,6 +44,25 @@ export class BackupStorageCommunicationManagerService {
             .where('backup_storage_verify_key.corporateId = :corporateId', { corporateId })
             .andWhere('backup_storage_verify_key.backupStorageId = :backupStorageId', { backupStorageId })
             .andWhere('backup_storage_verify_key.verifyKey NOT IN (SELECT verifyKey FROM queryForRevoke)')
+            .execute();
+    }
+
+    private async rotateActiveSessions(corporateId: number, backupStorageId: number) {
+        const queryForRevoke = this.backupStorageActiveSessionRepository
+            .createQueryBuilder('active_sessions_to_keep')
+            .select('active_sessions_to_keep.sessionKey as sessionKey')
+            .where('active_sessions_to_keep.corporateId = :corporateId', { corporateId })
+            .andWhere('active_sessions_to_keep.backupStorageId = :backupStorageId', { backupStorageId })
+            .orderBy('active_sessions_to_keep.expiresAt', 'DESC')
+            .limit(MAX_NUMBER_OF_ACTIVE_SESSIONS);
+
+        await this.backupStorageActiveSessionRepository
+            .createQueryBuilder('backup_storage_active_session')
+            .delete()
+            .addCommonTableExpression(queryForRevoke, 'queryForRevoke')
+            .where('backup_storage_active_session.corporateId = :corporateId', { corporateId })
+            .andWhere('backup_storage_active_session.backupStorageId = :backupStorageId', { backupStorageId })
+            .andWhere('backup_storage_active_session.sessionKey NOT IN (SELECT sessionKey FROM queryForRevoke)')
             .execute();
     }
 
@@ -87,7 +110,10 @@ export class BackupStorageCommunicationManagerService {
             ),
         ]);
 
-        await this.rotateVerifyKeys(handshakeData.corporateId, backupStorage.backupStorageId);
+        void Promise.allSettled([
+            this.rotateVerifyKeys(handshakeData.corporateId, backupStorage.backupStorageId),
+            this.rotateActiveSessions(handshakeData.corporateId, backupStorage.backupStorageId),
+        ]);
 
         return {
             sessionKey,
@@ -96,5 +122,32 @@ export class BackupStorageCommunicationManagerService {
             verifyKey,
             unencryptedFields: { backupStorageId: backupStorage.backupStorageId }
         };
+    }
+
+    async sendRequestToBackupStorage<T>(
+        url: string,
+        body: string,
+        activeSessionKey: string,
+        decryptResponse: boolean
+    ): Promise<T> {
+        const encryptedPayload = encryptAES256(
+            body,
+            activeSessionKey
+        )
+
+        const { data } = await firstValueFrom(
+            this.httpService.post(url, encryptedPayload),
+        );
+        
+        if (decryptResponse) {
+            const decryptedData = decryptAES256(
+                data,
+                activeSessionKey
+            )
+
+            return JSON.parse(decryptedData);
+        }
+
+        return data;
     }
 }
