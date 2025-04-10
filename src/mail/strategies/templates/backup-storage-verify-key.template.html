@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Welcome</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
+      rel="stylesheet"
+    />
+
+    <style>
+      * {
+        box-sizing: border-box;
+        padding: 0;
+        margin: 0;
+        font-family: "Lexend", sans-serif;
+        background-color: #f1f2f4;
+      }
+      @font-face {
+        font-family: "Poppins";
+        font-style: normal;
+        src: url("https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrFJM.woff2")
+          format("woff2");
+      }
+      @font-face {
+        font-family: "Lexend";
+        font-style: normal;
+        src: url("https://fonts.gstatic.com/s/lexend/v14/WBLUrFlE2Hs40kAMj8Bt9Xgf8ZXn.woff2")
+          format("woff2");
+      }
+      p,
+      h1,
+      span {
+        background-color: transparent;
+      }
+      td {
+        background-color: #ffffff;
+      }
+
+      table {
+        width: 100%;
+        max-width: 600px; /* Added flexible max-width */
+      }
+      body {
+        margin-top: 95px;
+      }
+      @media screen and (max-width: 600px) {
+        .header-table {
+          width: 100% !important;
+          max-width: 100% !important;
+          border: none;
+          outline: none;
+          margin-top: 0px !important;
+        }
+        table {
+          padding-inline: 1rem !important;
+          width: 100% !important;
+          max-width: 100%; /* Ensures table width adjusts fully on smaller screens */
+        }
+        table[role="presentation"] {
+          width: 100% !important;
+          max-width: 100%;
+        }
+
+        h1 {
+          font-size: 18px !important;
+          line-height: 26px !important;
+        }
+
+        p {
+          font-size: 14px !important;
+          line-height: 22px !important;
+        }
+
+        .portal-link-container {
+          margin: 1.5rem 5px !important;
+        }
+
+        .portal-link-container p {
+          text-align: left !important;
+          width: 100% !important;
+        }
+        .link-icon-container {
+          width: 60px !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header -->
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      class="header-table"
+      style="
+        background-color: #4723f5 !important;
+        max-width: 600px;
+        padding: 2rem;
+        margin: 0 auto;
+        background: #4723f5;
+      "
+    >
+      <tr style="background-color: #4723f5 !important">
+        <td
+          style="
+            display: block;
+            text-align: center;
+            background-color: #4723f5 !important;
+            margin-inline: auto;
+          "
+        >
+          <img
+            src="https://custody-rox.s3.us-east-1.amazonaws.com/logo-template.png"
+            title="header-logo"
+            style="background-color: transparent"
+          />
+        </td>
+      </tr>
+    </table>
+    <!-- body -->
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="
+        padding: 1.875rem 2.5rem;
+        font-size: 16px;
+        text-align: start;
+        margin: 0 auto;
+        background-color: #ffffff;
+        max-width: 600px;
+        width: 100%;
+        margin: 0 auto;
+      "
+    >
+      <tr style="text-align: start">
+        <td align="start">
+          <p
+            style="
+              text-align: start;
+              margin: 0 auto;
+              font-size: 16px;
+              line-height: 24px;
+              color: #0d0d0e;
+              font-weight: 400;
+            "
+          >
+            The key for your Self Custody Manager (SCM) has been securely generated. Please keep it in a safe and secure place. 
+            <br />
+            <br />
+            <em>Important: Never share your key with anyone and delete this mail after using the key.</em>
+          </p>
+
+          <div
+            class="portal-link-container"
+            style="
+              background-color: #f7f9fc !important;
+              border-radius: 12px;
+              display: flex;
+              height: 76px;
+              /* padding-inline: 33px; */
+              margin: 1.5rem 33px;
+            "
+          >
+            <div
+              class="link-icon-container"
+              style="
+                background-color: #ebeff5;
+                /* display: flex; */
+                /* align-items: center;
+                justify-content: center; */
+                width: 76px;
+                border-radius: 8px;
+                text-align: center;
+              "
+            >
+              <img
+                src="https://custody-rox.s3.us-east-1.amazonaws.com/Key.png"
+                alt="link icon"
+                style="
+                  display: inline-block;
+                  background-color: transparent;
+                  padding: 27px;
+                "
+              />
+            </div>
+            <div
+              style="
+                padding: 12px;
+                display: block;
+                flex-direction: column;
+                gap: 6px;
+                background-color: #f7f9fc;
+                width: 100%;
+              "
+            >
+              <div style="background-color: transparent">
+                <p
+                  style="
+                    font-size: 14px;
+                    font-weight: 500;
+                    line-height: 20px;
+                    color: #797f85;
+                    margin-bottom: 8px;
+                  "
+                >
+                  Your SCM Key
+                </p>
+              </div>
+              <div
+                style="
+                  display: flex;
+                  gap: 6px;
+                  align-items: center;
+                  justify-content: space-between;
+                  width: 100%;
+                  background-color: transparent;
+                "
+              >
+                <p
+                  style="
+                    display: inline-block;
+                    /* width: 300px; */
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    background-color: #f7f9fc;
+                  "
+                  id="linkText"
+                >
+                  {{scm_key}}
+                </p>
+              </div>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <p
+            style="
+              color: #797f85;
+              font-weight: 400;
+              font-size: 16px;
+              line-height: 24px;
+              padding-bottom: 2rem;
+            "
+          >
+            Rox Custody is built on three foundational layers to ensure
+            security, governance, and policy adherence. The security layer uses
+            advanced encryption and access controls to protect assets, while the
+            governance layer establishes protocols for transparency and
+            accountability. The policy layer ensures compliance with legal
+            standards and ethical guidelines. Together, these layers create a
+            reliable framework that safeguards assets and builds trust in Rox
+            Custody's services.
+          </p>
+
+          <p
+            style="
+              color: #797f85;
+              font-weight: 400;
+              font-size: 16px;
+              line-height: 24px;
+              padding-bottom: 2rem;
+            "
+          >
+            If you have any questions, please don't hesitate to contact us.
+          </p>
+
+          <p
+            style="
+              margin-top: 1.5rem;
+              color: #797f85;
+              font-weight: 400;
+              font-size: 16px;
+              line-height: 24px;
+              padding-bottom: 2rem;
+            "
+          >
+            Warm regards,<br />The RoxCustody Team
+          </p>
+        </td>
+      </tr>
+    </table>
+    <!-- Footer -->
+
+    <table
+      role="presentation"
+      width="100%"
+      cellpadding="0"
+      cellspacing="0"
+      style="
+        background-color: #f2f5fa;
+        max-width: 600px;
+        padding: 0;
+        margin: 0 auto;
+        border-collapse: collapse;
+        padding: 1.875rem 2.5rem;
+      "
+    >
+      <tr>
+        <td
+          style="
+            padding: 30px 40px;
+            font-size: 10px;
+            line-height: 1.5;
+            color: #adb2b8;
+            text-align: left;
+            background-color: #f2f5fa;
+          "
+        >
+          <p
+            style="
+              margin: 0 0 10px 0;
+              font-size: 12px;
+              line-height: 20px;
+              color: #adb2b8;
+              font-weight: 400;
+              margin-bottom: 40px;
+            "
+          >
+            Rox Custody is a product of Cercle Pay Limited, a company registered
+            in Canada with registration no: BC1354419. Cercle Pay Limited is
+            registered as Money Service Business with Fintrac Canada, with MSB
+            registration number: M23868930.
+          </p>
+
+          <h4
+            style="
+              margin: 10px 0;
+              font-size: 14px;
+              line-height: 20px;
+              color: #adb2b8;
+              font-weight: 600;
+              background-color: transparent;
+            "
+          >
+            Risk Disclaimer
+          </h4>
+          <p
+            style="
+              margin: 0;
+              font-size: 12px;
+              line-height: 20px;
+              color: #adb2b8;
+              font-weight: 400;
+              margin-bottom: 40px;
+            "
+          >
+            Digital assets, including cryptocurrencies, are subject to a high
+            degree of risk and volatility. Prices can fluctuate significantly
+            within a very short time period. You should carefully consider
+            whether trading or holding cryptoassets is suitable for you in light
+            of your financial circumstances, your level of experience,
+            investment objectives, and seek independent financial advice if
+            necessary. When purchasing, selling and/or holding cryptoassets, you
+            will not have access to the Financial Ombudsman Service (FOS) or the
+            Financial Services Compensation Scheme (FSCS) if something goes
+            wrong. You should be aware and prepared to potentially lose some or
+            all of your money. Rox Custody does not provide investment, tax, or
+            legal advice and is not a broker-dealer or financial advisor. All
+            transactions and services provided by Rox Custody are in compliance
+            with regulatory guidelines. Please consult your financial advisor
+            before making any investment decisions.
+          </p>
+
+          <p
+            style="
+              margin: 20px 0 0;
+              font-size: 12px;
+              line-height: 20px;
+              text-align: start;
+              color: #adb2b8;
+              font-weight: 400;
+            "
+          >
+            © 2025 Rox Custody. All Rights Reserved.
+          </p>
+        </td>
+      </tr>
+    </table>
+
+    <script>
+      function copyToClipboard() {
+        const linkText = document.getElementById("linkText").innerText; // Get the link text
+        navigator.clipboard
+          .writeText(linkText)
+          .then(() => {
+            // alert("Link copied to clipboard!");
+            console.log("Link copied to clipboard!", linkText);
+          })
+          .catch((err) => {
+            console.error("Error copying text: ", err);
+          });
+      }
+    </script>
+  </body>
+</html>

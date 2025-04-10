@@ -18,7 +18,7 @@ export class TransactionsRMQController {
   async signTransactionThoughtBridge(
     @Payload() dto: SignTransactionThoughtBridge,
   ): Promise<CustodySignedTransaction> {
-    return this.transactionService.signTransactionThoughtBridge(dto);
+    return this.transactionService.signTransactionThroughBridge(dto);
   }
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.signContractTransaction })
