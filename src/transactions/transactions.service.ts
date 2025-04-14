@@ -100,6 +100,7 @@ export class TransactionsService {
     const failedRequestsWithSCMNotConnected = failedRequests.filter(
       (response) => response.reason instanceof SCMNotConnection
     ) as PromiseRejectedResult[];
+
     if (failedRequestsWithSCMNotConnected.length) {
       throw new SCMNotConnection(
         {
@@ -107,6 +108,14 @@ export class TransactionsService {
             (response) => response.reason?.backupStoragesIds
           ),
         }
+      );
+    }
+
+    if (failedRequests.length) {
+      throw new Error(
+        `Error getting keys from backup storages: ${failedRequests
+          .map((response) => response.reason)
+          .join(', ')}`
       );
     }
 

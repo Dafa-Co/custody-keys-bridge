@@ -3,7 +3,7 @@ import { BackupStorageVerifyKey } from "../entities/backup-storage-verify-key.en
 import { EntityManager, Repository } from "typeorm";
 import { BackupStorageActiveSession } from "../entities/backup-storage-active-session.entity";
 import { v4 as uuidv4 } from 'uuid';
-import { MAX_NUMBER_OF_ACTIVE_SESSIONS, REVOKE_VERIFY_KEY_AFTER } from "../constants/backup-storage.constants";
+import { BACKUP_STORAGE_EXPIRATION_TIME_IN_MINUTES, MAX_NUMBER_OF_ACTIVE_SESSIONS, REVOKE_VERIFY_KEY_AFTER } from "../constants/backup-storage.constants";
 import { BackupStorageHandshakingDto } from "rox-custody_common-modules/libs/dtos/backup-storage-handshaking.dto";
 import { bridgeHandshakingResponseDto } from "rox-custody_common-modules/libs/dtos/bridge-handshaking-response.dto";
 import { ForbiddenException } from "@nestjs/common";
@@ -83,7 +83,7 @@ export class BackupStorageCommunicationManagerService {
         handshakeData: BackupStorageHandshakingDto
     ): Promise<bridgeHandshakingResponseDto> {
         const expirationAfterHour = new Date();
-        expirationAfterHour.setHours(expirationAfterHour.getHours() + 1);
+        expirationAfterHour.setMinutes(expirationAfterHour.getMinutes() + BACKUP_STORAGE_EXPIRATION_TIME_IN_MINUTES);
 
         const backupStorage = await this.backupStorageVerifyKeyRepository.findOne({
             where: { verifyKey: handshakeData.verifyKey, corporateId: handshakeData.corporateId },

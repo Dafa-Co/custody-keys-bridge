@@ -75,7 +75,7 @@ export class BackupStorageIntegrationService {
           )
       } catch (error) {
         // if the status code is 404, that mean the key is not found in the api approval
-        if (error?.response?.data.message === 'File not found') {
+        if (error?.response?.data.message?.toLowerCase() === 'file not found') {
           throw new KeyNotFoundInSCM();
         }
       }
