@@ -69,6 +69,7 @@ async function bootstrap() {
     })
   );
 
+  await server.init();
   await server.startAllMicroservices();
 }
 bootstrap();
