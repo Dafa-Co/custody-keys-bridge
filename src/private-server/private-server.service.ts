@@ -1,34 +1,81 @@
-import { Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ICustodyKeyPairResponse, IGenerateKeyPairResponse } from 'rox-custody_common-modules/libs/interfaces/generate-ket-pair.interface';
 import {
   _EventPatterns,
   _MessagePatterns,
-  DBIdentifierRMQ,
 } from 'rox-custody_common-modules/libs/utils/microservice-constants';
-import { firstValueFrom, Observable, Subject } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { GenerateKeyPairBridge } from 'rox-custody_common-modules/libs/interfaces/generate-key.interface';
 import { PrivateServerQueue } from 'src/libs/rmq/private-server.decorator';
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
-import { mobileKey } from 'rox-custody_common-modules/libs/interfaces/push-key-to-mobile.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
-import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
+import { backupStorageConnectionTypes, IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
+import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
+import { getApiApprovalUrl, getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-approval';
+import { configs } from 'src/configs/configs';
+import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
+import { cleanUpPrivateKeyDto } from 'rox-custody_common-modules/libs/dtos/clean-up-private-key.dto';
+import { BadRequestException } from '@nestjs/common';
 
 @TenantService()
 export class PrivateServerService {
-  private readonly keyUpdatesSubject = new Subject<mobileKey>();
-
   constructor(
     @PrivateServerQueue() private readonly privateServerQueue: ClientProxy,
-    private readonly backupStorageIntegrationService: BackupStorageIntegrationService
-  ) {}
+    private readonly backupStorageIntegrationService: BackupStorageIntegrationService,
+    private readonly logger: CustodyLogger,
+  ) { }
 
+  private splitKeyForBackupStorages(
+    key: string,
+    backupStoragesIds: number[],
+  ) {
+    const backupStorageParts: { backupStorageId: number; privateKeySlice: string }[] = [];
+
+    if (backupStoragesIds.length > 0) {
+      let remainingKey = key;
+
+      for (let i = 0; i < backupStoragesIds.length; i++) {
+        const isLastStorage = i === backupStoragesIds.length - 1;
+        const currentSplitSize = isLastStorage
+          ? remainingKey.length
+          : Math.ceil(remainingKey.length / (backupStoragesIds.length - i));
+
+        const part = remainingKey.substring(0, currentSplitSize);
+        remainingKey = remainingKey.substring(currentSplitSize);
+
+        backupStorageParts.push({
+          backupStorageId: backupStoragesIds[i],
+          privateKeySlice: part
+        });
+      }
+    }
+
+    return backupStorageParts;
+  }
+
+  private checkAllHaveActiveSessions(
+    backupStorages: { activeSessions: any[], id: number }[],
+  ) {
+    const backupStoragesWithNoActiveSession = backupStorages.filter(
+      (backupStorage) =>
+        !backupStorage.activeSessions || backupStorage.activeSessions.length === 0
+    );
+
+    if (backupStoragesWithNoActiveSession.length) {
+      throw new SCMNotConnection(
+        {
+          backupStoragesIds: backupStoragesWithNoActiveSession.map(
+            (backupStorage) => backupStorage.id
+          ),
+        }
+      );
+    }
+  }
 
   async generateKeyPair(
     payload: GenerateKeyPairBridge,
   ): Promise<ICustodyKeyPairResponse> {
-
-    const { apiApprovalEssential } = payload;
+    const { corporateId, vaultId } = payload;
 
     const key = await firstValueFrom(
       this.privateServerQueue.send<IGenerateKeyPairResponse>(
@@ -37,25 +84,73 @@ export class PrivateServerService {
       ),
     );
 
-    // publish only if this is key for vault in the other cases it it will store the full key in the private server
-    if(payload.vaultId) {
-      const storeIntoApiApprovalPayload: IRequestDataFromApiApproval = {
-        ...apiApprovalEssential,
-        data: {
-          key: key.HalfOfPrivateKey,
-          key_id: key.keyId,
-        }
-      };
+    const keysParts = this.splitKeyForBackupStorages(
+      key.backupStoragesPart,
+      payload.apiApprovalEssential.backupStoragesIds,
+    );
 
-      // store the key to the Api Approval
-      await this.backupStorageIntegrationService.storeKeyToApiApproval(storeIntoApiApprovalPayload)
+    // publish only if this is key for vault in the other cases it it will store the full key in the private server
+    if (keysParts.length) {
+      try {
+        const backupStorages = await this.backupStorageIntegrationService.getBackupStoragesInfo(
+          keysParts.map((keyPart) => keyPart.backupStorageId),
+          true,
+        );
+
+        this.checkAllHaveActiveSessions(backupStorages);
+
+        // store the key to the Api Approval
+        await Promise.all(
+          keysParts.map(async ({ backupStorageId, privateKeySlice }, index) => {
+            const backupStorage = backupStorages.find(
+              (backupStorage) => backupStorage.id === backupStorageId
+            );
+
+            if (!backupStorage) {
+              throw new Error(`Backup storage with id ${backupStorageId} not found`);
+            }
+
+            const folderName = getEnvFolderName(
+              corporateId,
+              vaultId,
+              configs.NODE_ENV,
+            );
+
+            await this.backupStorageIntegrationService.storeKeyToApiApproval({
+              url: getApiApprovalUrl(
+                backupStorage.url,
+                backupStorageConnectionTypes.setKey,
+                folderName,
+              ),
+              sliceIndex: index,
+              privateKeySlice,
+              activeSessions: backupStorage.activeSessions.map(
+                (activeSession) => activeSession.sessionKey
+              ),
+              backupStorageId,
+              privateKeyId: key.keyId,
+            });
+          })
+        )
+      } catch (error) {
+        this.logger.error(
+          `Error while storing key to Api Approval: ${error.message}`,
+          { stack: error.stack },
+        );
+        const rollbackBody: cleanUpPrivateKeyDto = { keyId: key.keyId };
+        this.privateServerQueue.emit(
+          { cmd: _EventPatterns.rollbackKeyGeneration },
+          rollbackBody,
+        )
+        throw new BadRequestException(
+          'Error while storing key to Api Approval',
+        );
+      }
     }
 
-    const custodyKey: ICustodyKeyPairResponse = {
+    return {
       address: key.address,
       keyId: key.keyId
     }
-
-    return custodyKey;
   }
 }
