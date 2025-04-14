@@ -1,6 +1,5 @@
 import { Module, Scope } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { databaseConfig } from './database/database.config';
 import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './configs/validation-schema';
@@ -28,7 +27,6 @@ import { MailsModule } from './mail/mail.module';
       isGlobal: true,
       validationSchema: envValidationSchema,
     }),
-    TypeOrmModule.forRoot(databaseConfig),
     AuthModule,
     PrivateServerModule,
     TransactionsModule,
