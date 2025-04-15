@@ -89,6 +89,12 @@ export class BackupStorageCommunicationManagerService {
             where: { verifyKey: handshakeData.verifyKey, corporateId: handshakeData.corporateId },
         });
 
+        console.debug('Checking backup storage with verify key', {
+            verifyKey: handshakeData.verifyKey,
+            corporateId: handshakeData.corporateId,
+            backupStorage: backupStorage,
+        });
+
         if (!backupStorage) {
             throw new ForbiddenException('Invalid verify key');
         }
