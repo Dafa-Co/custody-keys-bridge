@@ -22,6 +22,7 @@ import { getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-appr
 import { configs } from 'src/configs/configs';
 import { AssetType } from 'rox-custody_common-modules/libs/entities/asset.entity';
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-integration/constants/backup-storage.constants';
+import { softJsonStringify } from 'rox-custody_common-modules/libs/utils/soft-json-stringify.utils';
 
 @TenantService()
 export class TransactionsService {
@@ -74,6 +75,11 @@ export class TransactionsService {
       backupStoragesIds,
       true,
     );
+
+    this.logger.info(
+      `Backup storages info: ${softJsonStringify(backupStorageInfo)}`
+    );
+
     this.checkAllHaveActiveSessions(backupStorageInfo);
 
     const keyPartsResponses = await Promise.allSettled(
@@ -100,6 +106,12 @@ export class TransactionsService {
     const failedRequestsWithSCMNotConnected = failedRequests.filter(
       (response) => response.reason instanceof SCMNotConnection
     ) as PromiseRejectedResult[];
+
+    this.logger.info(
+      `Failed to get keys from backup storages: ${softJsonStringify(failedRequests)} - ${
+        softJsonStringify(failedRequestsWithSCMNotConnected)
+      }`
+    )
 
     if (failedRequestsWithSCMNotConnected.length) {
       throw new SCMNotConnection(
