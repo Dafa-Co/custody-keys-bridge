@@ -34,11 +34,13 @@ export class BackupStorageIntegrationService {
 
   async getBackupStoragesInfo(
     backupStoragesIds: number[],
+    corporateId: number,
     sortActiveSessions = false,
   ): Promise<BackupStorage[]> {
     const backupStorages = await this.backupStorageRepository
       .createQueryBuilder('backup_storage')
       .where('backup_storage.id IN (:...ids)', { ids: backupStoragesIds })
+      .andWhere('backup_storage.corporateId = :corporateId', { corporateId })
       .leftJoinAndMapMany(
         'backup_storage.activeSessions',
         BackupStorageActiveSession,
