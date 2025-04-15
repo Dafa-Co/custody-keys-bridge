@@ -94,6 +94,7 @@ export class PrivateServerService {
       try {
         const backupStorages = await this.backupStorageIntegrationService.getBackupStoragesInfo(
           keysParts.map((keyPart) => keyPart.backupStorageId),
+          corporateId,
           true,
         );
 
