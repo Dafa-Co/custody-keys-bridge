@@ -73,11 +73,8 @@ export class TransactionsService {
 
     const backupStorageInfo = await this.backupStorageIntegrationService.getBackupStoragesInfo(
       backupStoragesIds,
+      signTransaction.corporateId,
       true,
-    );
-
-    this.logger.info(
-      `Backup storages info: ${softJsonStringify(backupStorageInfo)}`
     );
 
     this.checkAllHaveActiveSessions(backupStorageInfo);
@@ -106,12 +103,6 @@ export class TransactionsService {
     const failedRequestsWithSCMNotConnected = failedRequests.filter(
       (response) => response.reason instanceof SCMNotConnection
     ) as PromiseRejectedResult[];
-
-    this.logger.info(
-      `Failed to get keys from backup storages: ${softJsonStringify(failedRequests)} - ${
-        softJsonStringify(failedRequestsWithSCMNotConnected)
-      }`
-    )
 
     if (failedRequestsWithSCMNotConnected.length) {
       throw new SCMNotConnection(
