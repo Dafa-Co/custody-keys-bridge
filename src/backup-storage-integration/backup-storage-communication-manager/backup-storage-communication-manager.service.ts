@@ -105,7 +105,7 @@ export class BackupStorageCommunicationManagerService {
                 expiresAt: expirationAfterHour,
             }),
             this.backupStorageRepository.update(
-                { id: backupStorage.backupStorageId },
+                { id: backupStorage.backupStorageId, corporateId: handshakeData.corporateId },
                 { url: handshakeData.serverUrl },
             ),
         ]);
