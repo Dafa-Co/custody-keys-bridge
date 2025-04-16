@@ -115,6 +115,7 @@ export class PrivateServerService {
               corporateId,
               vaultId,
               configs.NODE_ENV,
+              backupStorageId,
             );
 
             await this.backupStorageIntegrationService.storeKeyToApiApproval({
