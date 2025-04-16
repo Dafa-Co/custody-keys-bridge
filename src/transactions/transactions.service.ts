@@ -85,6 +85,7 @@ export class TransactionsService {
           backupStorage.corporateId,
           signTransaction.vaultId,
           configs.NODE_ENV,
+          backupStorage.id
         );
 
         return this.backupStorageIntegrationService.getKeyFromApiApproval({
