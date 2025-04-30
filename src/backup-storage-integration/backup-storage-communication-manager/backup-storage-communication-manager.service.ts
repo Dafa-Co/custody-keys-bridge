@@ -79,6 +79,17 @@ export class BackupStorageCommunicationManagerService {
             });
     }
 
+    async clearVerifyKeysOfBackupStorage(
+        corporateId: number,
+        backupStorageId: number,
+    ): Promise<void> {
+        await this.backupStorageVerifyKeyRepository
+            .delete({
+                corporateId,
+                backupStorageId,
+            });
+    }
+
     async handshakeWithBackupStorage(
         handshakeData: BackupStorageHandshakingDto
     ): Promise<bridgeHandshakingResponseDto> {
