@@ -154,6 +154,7 @@ export class BackupStorageIntegrationService {
       corporateId: dto.corporateId,
     }, ['id'])
 
+    await this.backupStorageCommunicationManagerService.clearVerifyKeysOfBackupStorage(dto.corporateId, dto.id);
     await this.backupStorageCommunicationManagerService.saveVerifyKey(verifyKey, dto.corporateId, dto.id);
 
     const emailEvent: ISendEmailEvent<MailStrategy.VERIFY_KEY> = {
