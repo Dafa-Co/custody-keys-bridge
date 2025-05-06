@@ -56,6 +56,10 @@ export class BackupStorageCommunicationManagerService {
         data: Array<{ key: string; createdAt: Date }>,
         newKey: string,
     ): { isNewKey: boolean; keyToReturn: string } {
+        if (!data?.length) {
+            return { isNewKey: true, keyToReturn: newKey };
+        }
+
         const latestKey = data[0].key;
         const latestKeyCreatedAt = data[0].createdAt;
 
