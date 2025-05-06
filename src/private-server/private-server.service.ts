@@ -10,7 +10,7 @@ import { PrivateServerQueue } from 'src/libs/rmq/private-server.decorator';
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { backupStorageConnectionTypes, IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
-import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
+import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { getApiApprovalUrl, getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-approval';
 import { configs } from 'src/configs/configs';
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
@@ -62,7 +62,7 @@ export class PrivateServerService {
     );
 
     if (backupStoragesWithNoActiveSession.length) {
-      throw new SCMNotConnection(
+      throw new SCMNotConnected(
         {
           backupStoragesIds: backupStoragesWithNoActiveSession.map(
             (backupStorage) => backupStorage.id

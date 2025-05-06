@@ -16,7 +16,7 @@ import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/int
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
 import { SignContractTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { ICustodySignedContractTransaction } from 'rox-custody_common-modules/libs/interfaces/contract-transaction.interface';
-import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
+import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { BackupStorage } from 'src/backup-storage-integration/entities/backup-storage.entity';
 import { getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-approval';
 import { configs } from 'src/configs/configs';
@@ -52,7 +52,7 @@ export class TransactionsService {
     );
 
     if (backupStoragesWithNoActiveSession.length) {
-      throw new SCMNotConnection(
+      throw new SCMNotConnected(
         {
           backupStoragesIds: backupStoragesWithNoActiveSession.map(
             (backupStorage) => backupStorage.id
@@ -102,11 +102,11 @@ export class TransactionsService {
       (response) => response.status === 'rejected'
     ) as PromiseRejectedResult[];
     const failedRequestsWithSCMNotConnected = failedRequests.filter(
-      (response) => response.reason instanceof SCMNotConnection
+      (response) => response.reason instanceof SCMNotConnected
     ) as PromiseRejectedResult[];
 
     if (failedRequestsWithSCMNotConnected.length) {
-      throw new SCMNotConnection(
+      throw new SCMNotConnected(
         {
           backupStoragesIds: failedRequestsWithSCMNotConnected.flatMap(
             (response) => response.reason?.backupStoragesIds
