@@ -60,7 +60,7 @@ export class BackupStorageCommunicationManagerService {
         const latestKeyCreatedAt = data[0].createdAt;
 
         // if latest key is less than 5 minutes old, do not save new key and return latest key 
-        if (new Date().getTime() - latestKeyCreatedAt.getTime() < 1 * 60 * 1000) {
+        if (new Date().getTime() - latestKeyCreatedAt.getTime() < 5 * 60 * 1000) {
             return { isNewKey: false, keyToReturn: latestKey };
         }
 
