@@ -166,7 +166,7 @@ export class BackupStorageIntegrationService {
       }
     }
 
-    const results = this.eventEmitter.emit(
+    this.eventEmitter.emit(
       EmailEvents.sendEmail,
       emailEvent,
     )
