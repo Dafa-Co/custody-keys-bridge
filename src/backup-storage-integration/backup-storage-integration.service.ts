@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyNotFoundInSCM } from 'rox-custody_common-modules/libs/custom-errors/key-not-found-in-scm.exception';
-import { SCMNotConnection } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
+import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { backupStorageConnectionTypes, ICommunicatingWithBackupStorageForKeyManagement, IGetKeyFromBackupStorage, IRequestDataFromApiApproval, ISendRequestToBackupStorage } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { firstValueFrom } from 'rxjs';
 import { VerifyKeyHeader } from 'src/libs/constant/api-approval-constant';
@@ -83,7 +83,7 @@ export class BackupStorageIntegrationService {
       }
     }
 
-    throw new SCMNotConnection({
+    throw new SCMNotConnected({
       message: `Backup storage with url ${url} is not connected`,
       backupStoragesIds: [dto.backupStorageId],
       privateKeyId: dto.privateKeyId,
