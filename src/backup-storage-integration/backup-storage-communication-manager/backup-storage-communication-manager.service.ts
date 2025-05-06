@@ -28,44 +28,6 @@ export class BackupStorageCommunicationManagerService {
         return uuidv4().replace(/-/g, '').substring(0, 32);
     }
 
-    private async rotateVerifyKeys(corporateId: number, backupStorageId: number) {
-        const queryForRevoke = this.backupStorageVerifyKeyRepository
-            .createQueryBuilder('verify_keys_to_keep')
-            .select('verify_keys_to_keep.verifyKey as verifyKey')
-            .where('verify_keys_to_keep.corporateId = :corporateId', { corporateId })
-            .andWhere('verify_keys_to_keep.backupStorageId = :backupStorageId', { backupStorageId })
-            .orderBy('verify_keys_to_keep.created_at', 'DESC')
-            .limit(REVOKE_VERIFY_KEY_AFTER);
-
-        await this.backupStorageVerifyKeyRepository
-            .createQueryBuilder('backup_storage_verify_key')
-            .delete()
-            .addCommonTableExpression(queryForRevoke, 'queryForRevoke')
-            .where('backup_storage_verify_key.corporateId = :corporateId', { corporateId })
-            .andWhere('backup_storage_verify_key.backupStorageId = :backupStorageId', { backupStorageId })
-            .andWhere('backup_storage_verify_key.verifyKey NOT IN (SELECT verifyKey FROM queryForRevoke)')
-            .execute();
-    }
-
-    private async rotateActiveSessions(corporateId: number, backupStorageId: number) {
-        const queryForRevoke = this.backupStorageActiveSessionRepository
-            .createQueryBuilder('active_sessions_to_keep')
-            .select('active_sessions_to_keep.sessionKey as sessionKey')
-            .where('active_sessions_to_keep.corporateId = :corporateId', { corporateId })
-            .andWhere('active_sessions_to_keep.backupStorageId = :backupStorageId', { backupStorageId })
-            .orderBy('active_sessions_to_keep.expiresAt', 'DESC')
-            .limit(MAX_NUMBER_OF_ACTIVE_SESSIONS);
-
-        await this.backupStorageActiveSessionRepository
-            .createQueryBuilder('backup_storage_active_session')
-            .delete()
-            .addCommonTableExpression(queryForRevoke, 'queryForRevoke')
-            .where('backup_storage_active_session.corporateId = :corporateId', { corporateId })
-            .andWhere('backup_storage_active_session.backupStorageId = :backupStorageId', { backupStorageId })
-            .andWhere('backup_storage_active_session.sessionKey NOT IN (SELECT sessionKey FROM queryForRevoke)')
-            .execute();
-    }
-
     async saveVerifyKey(
         verifyKey: string,
         corporateId: number,
@@ -90,6 +52,102 @@ export class BackupStorageCommunicationManagerService {
             });
     }
 
+    private getKeysToSaveAndNewOne(
+        data: Array<{ key: string; createdAt: Date }>,
+        newKey: string,
+    ): { isNewKey: boolean; keyToReturn: string } {
+        const latestKey = data[0].key;
+        const latestKeyCreatedAt = data[0].createdAt;
+
+        // if latest key is less than 5 minutes old, do not save new key and return latest key 
+        if (new Date().getTime() - latestKeyCreatedAt.getTime() < 1 * 60 * 1000) {
+            return { isNewKey: false, keyToReturn: latestKey };
+        }
+
+        return { isNewKey: true, keyToReturn: newKey };
+    }
+
+    private async handleSavingOfNewVerifyKey(
+        backupStorageId: number,
+        verifyKey: string,
+        handshakeData: BackupStorageHandshakingDto,
+        transactionalEntityManager: EntityManager,
+        verifyKeys: BackupStorageVerifyKey[],
+    ) {
+        const topVerifyKeys: Partial<BackupStorageVerifyKey>[] = verifyKeys.slice(0, REVOKE_VERIFY_KEY_AFTER);
+
+        const { isNewKey, keyToReturn } = this.getKeysToSaveAndNewOne(
+            topVerifyKeys.map(vk => ({ key: vk.verifyKey, createdAt: vk.created_at })),
+            verifyKey
+        );
+
+        if (isNewKey) {
+            await transactionalEntityManager
+                .getRepository(BackupStorageVerifyKey)
+                .insert({
+                    verifyKey: keyToReturn,
+                    corporateId: handshakeData.corporateId,
+                    backupStorageId,
+                });
+
+            // push new verify key at the start of the array and then slice it to get the top 3
+            topVerifyKeys.unshift({ verifyKey: keyToReturn })
+            const keysToKeep = topVerifyKeys.map(vk => vk.verifyKey).slice(0, REVOKE_VERIFY_KEY_AFTER);
+
+            await transactionalEntityManager
+                .getRepository(BackupStorageVerifyKey)
+                .createQueryBuilder('backup_storage_verify_key')
+                .delete()
+                .where('backup_storage_verify_key.corporateId = :corporateId', { corporateId: handshakeData.corporateId })
+                .andWhere('backup_storage_verify_key.backupStorageId = :backupStorageId', { backupStorageId })
+                .andWhere('backup_storage_verify_key.verifyKey NOT IN (:...verifyKeys)', { verifyKeys: keysToKeep })
+                .execute();
+        }
+
+        return keyToReturn;
+    }
+
+    private async handleSavingOfNewSessionKey(
+        backupStorageId: number,
+        sessionKey: string,
+        handshakeData: BackupStorageHandshakingDto,
+        transactionalEntityManager: EntityManager,
+        allSessions: BackupStorageActiveSession[],
+        expirationAfterHour: Date,
+    ) {
+        const topActiveSessions: Partial<BackupStorageActiveSession>[] = allSessions.slice(0, MAX_NUMBER_OF_ACTIVE_SESSIONS);
+
+        const { isNewKey: isNewSession, keyToReturn: sessionKeyToReturn } = this.getKeysToSaveAndNewOne(
+            topActiveSessions.map(as => ({ key: as.sessionKey, createdAt: as.created_at })),
+            sessionKey
+        );
+
+        if (isNewSession) {
+            await transactionalEntityManager
+                .getRepository(BackupStorageActiveSession)
+                .insert({
+                    sessionKey: sessionKeyToReturn,
+                    corporateId: handshakeData.corporateId,
+                    backupStorageId,
+                    expiresAt: expirationAfterHour,
+                });
+
+            // push new session key at the start of the array and then slice it to get the top 3
+            topActiveSessions.unshift({ sessionKey: sessionKeyToReturn })
+            const keysToKeep = topActiveSessions.map(as => as.sessionKey).slice(0, MAX_NUMBER_OF_ACTIVE_SESSIONS);
+            await transactionalEntityManager
+                .getRepository(BackupStorageActiveSession)
+                .createQueryBuilder('backup_storage_active_session')
+                .delete()
+                .where('backup_storage_active_session.corporateId = :corporateId', { corporateId: handshakeData.corporateId })
+                .andWhere('backup_storage_active_session.backupStorageId = :backupStorageId', { backupStorageId })
+                .andWhere('backup_storage_active_session.sessionKey NOT IN (:...sessions)', { sessions: keysToKeep })
+                .execute();
+        }
+
+        return sessionKeyToReturn;
+    }
+
     async handshakeWithBackupStorage(
         handshakeData: BackupStorageHandshakingDto
     ): Promise<bridgeHandshakingResponseDto> {
@@ -107,30 +165,54 @@ export class BackupStorageCommunicationManagerService {
         const verifyKey = this.generateVerifyKey();
         const sessionKey = SecureCommunicationService.generateSymmetricKey();
 
-        await Promise.all([
-            this.saveVerifyKey(verifyKey, handshakeData.corporateId, backupStorage.backupStorageId),
-            this.backupStorageActiveSessionRepository.insert({
-                sessionKey,
-                corporateId: handshakeData.corporateId,
-                backupStorageId: backupStorage.backupStorageId,
-                expiresAt: expirationAfterHour,
-            }),
-            this.backupStorageRepository.update(
-                { id: backupStorage.backupStorageId, corporateId: handshakeData.corporateId },
-                { url: handshakeData.serverUrl },
-            ),
-        ]);
+        await this.backupStorageRepository.update(
+            { id: backupStorage.backupStorageId, corporateId: handshakeData.corporateId },
+            { url: handshakeData.serverUrl },
+        )
 
-        void Promise.allSettled([
-            this.rotateVerifyKeys(handshakeData.corporateId, backupStorage.backupStorageId),
-            this.rotateActiveSessions(handshakeData.corporateId, backupStorage.backupStorageId),
-        ]);
+        const { newSessionKey, newVerifyKey } = await this.backupStorageRepository.manager.transaction(async (transactionalEntityManager: EntityManager) => {
+            const verifyKeys = await transactionalEntityManager
+                .getRepository(BackupStorageVerifyKey)
+                .createQueryBuilder('verifyKey')
+                .setLock('pessimistic_write')
+                .where('verifyKey.corporateId = :corporateId', { corporateId: handshakeData.corporateId })
+                .andWhere('verifyKey.backupStorageId = :backupStorageId', { backupStorageId: backupStorage.backupStorageId })
+                .orderBy('verifyKey.created_at', 'DESC')
+                .getMany();
+
+            const allSessions = await transactionalEntityManager
+                .getRepository(BackupStorageActiveSession)
+                .createQueryBuilder('activeSession')
+                .where('activeSession.corporateId = :corporateId', { corporateId: handshakeData.corporateId })
+                .andWhere('activeSession.backupStorageId = :backupStorageId', { backupStorageId: backupStorage.backupStorageId })
+                .orderBy('activeSession.expiresAt', 'DESC')
+                .getMany();
+
+            const newVerifyKey = await this.handleSavingOfNewVerifyKey(
+                backupStorage.backupStorageId,
+                verifyKey,
+                handshakeData,
+                transactionalEntityManager,
+                verifyKeys
+            );
+
+            const newSessionKey = await this.handleSavingOfNewSessionKey(
+                backupStorage.backupStorageId,
+                sessionKey,
+                handshakeData,
+                transactionalEntityManager,
+                allSessions,
+                expirationAfterHour
+            );
+
+            return { newVerifyKey, newSessionKey };
+        })
 
         return {
-            sessionKey,
+            sessionKey: newSessionKey,
             sessionExpirationDate: expirationAfterHour,
             id: backupStorage.backupStorageId,
-            verifyKey,
+            verifyKey: newVerifyKey,
             unencryptedFields: { backupStorageId: backupStorage.backupStorageId }
         };
     }
@@ -149,7 +231,7 @@ export class BackupStorageCommunicationManagerService {
         const { data } = await firstValueFrom(
             this.httpService.post(url, encryptedPayload),
         );
-        
+
         if (decryptResponse) {
             const decryptedData = decryptAES256(
                 data,
