@@ -41,6 +41,7 @@
     "@nestjs/typeorm": "^10.0.2",
     "@sendgrid/mail": "^8.1.4",
     "@slack/webhook": "^7.0.4",
+    "@solana/web3.js": "^1.98.2",
     "axios": "^1.7.7",
     "bitcoinjs-lib": "^7.0.0-rc.0",
     "class-transformer": "^0.5.1",
