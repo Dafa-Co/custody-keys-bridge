@@ -1,12 +1,9 @@
 import { Module, Scope } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { envValidationSchema } from './configs/validation-schema';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { TenancyModule } from './libs/tenancy/tenancy.module';
-import { APP_GUARD } from '@nestjs/core';
-import { AccessTokenGuard } from './auth/guards/verify-access-token.guard';
 import { PrivateServerModule } from './private-server/private-server.module';
 import { TransactionsModule } from './transactions/transactions.module';
 import { BackupStorageIntegrationModule } from './backup-storage-integration/backup-storage-integration.module';
@@ -27,7 +24,6 @@ import { MailsModule } from './mail/mail.module';
       isGlobal: true,
       validationSchema: envValidationSchema,
     }),
-    AuthModule,
     PrivateServerModule,
     TransactionsModule,
     BackupStorageIntegrationModule,
@@ -40,13 +36,6 @@ import { MailsModule } from './mail/mail.module';
     MailsModule,
   ],
   controllers: [],
-  providers: [
-    {
-      provide: APP_GUARD,
-      scope: Scope.REQUEST,
-      useClass: AccessTokenGuard
-    }
-  ],
 })
 
 export class AppModule { }

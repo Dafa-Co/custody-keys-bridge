@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@biconomy/account": "^4.5.7",
-    "@golevelup/nestjs-rabbitmq": "^5.5.0",
+    "@golevelup/nestjs-rabbitmq": "~5.4.0",
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^3.0.3",
     "@nestjs/class-validator": "^0.13.4",
