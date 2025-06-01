@@ -44,6 +44,17 @@ export class TransactionsService {
     );
   }
 
+  private async getSignedSwapTransactionFromPrivateServer(
+    privateServerSignTransaction: any,
+  ) {
+    return await firstValueFrom(
+      this.privateServerQueue.send<CustodySignedTransaction>(
+        { cmd: _MessagePatterns.signSwapTransaction },
+        privateServerSignTransaction,
+      ),
+    );
+  }
+
   private checkAllHaveActiveSessions(backupStorages: BackupStorage[]) {
     const backupStoragesWithNoActiveSession = backupStorages.filter(
       (backupStorage) =>
@@ -133,7 +144,7 @@ export class TransactionsService {
       const index = keyPart.indexOf(BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER);
       return {
         index: parseInt(keyPart.slice(0, index), 10),
-        key: keyPart.slice(index + 1), 
+        key: keyPart.slice(index + 1),
       }
     })
       .sort((a, b) => a.index - b.index)
@@ -147,6 +158,19 @@ export class TransactionsService {
     const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
 
     return this.getSignedTransactionFromPrivateServer(
+      {
+        keyPart: backupStoragesKey,
+        ...dto.signTransaction,
+      },
+    );
+  }
+
+  async signSwapTransactionThroughBridge(
+    dto: any,
+  ): Promise<CustodySignedTransaction> {
+    const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
+
+    return this.getSignedSwapTransactionFromPrivateServer(
       {
         keyPart: backupStoragesKey,
         ...dto.signTransaction,
