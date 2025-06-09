@@ -152,7 +152,8 @@ export class PrivateServerService {
 
     return {
       address: key.address,
-      keyId: key.keyId
+      keyId: key.keyId,
+      eoaAddress: key.eoaAddress,
     }
   }
 }
