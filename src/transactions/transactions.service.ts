@@ -10,7 +10,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import {
   CustodySignedTransaction,
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
-import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
+import { SignSwapTransactionThoughtBridge, SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
@@ -45,7 +45,7 @@ export class TransactionsService {
   }
 
   private async getSignedSwapTransactionFromPrivateServer(
-    privateServerSignTransaction: any,
+    privateServerSignTransaction: PrivateServerSignTransactionDto,
   ) {
     return await firstValueFrom(
       this.privateServerQueue.send<CustodySignedTransaction>(
@@ -166,7 +166,7 @@ export class TransactionsService {
   }
 
   async signSwapTransactionThroughBridge(
-    dto: any,
+    dto: SignSwapTransactionThoughtBridge,
   ): Promise<CustodySignedTransaction> {
     const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
 

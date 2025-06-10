@@ -1,7 +1,7 @@
 import { TransactionsService } from './transactions.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
-import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
+import { SignSwapTransactionThoughtBridge, SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import {
   CustodySignedTransaction,
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
@@ -30,7 +30,7 @@ export class TransactionsRMQController {
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.signSwapTransaction })
   async signSwapTransactionThoughtBridge(
-    @Payload() dto: any,
+    @Payload() dto: SignSwapTransactionThoughtBridge,
   ): Promise<CustodySignedTransaction> {
     return this.transactionService.signSwapTransactionThroughBridge(dto);
   }
