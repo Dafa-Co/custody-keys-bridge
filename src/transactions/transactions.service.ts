@@ -10,7 +10,7 @@ import { firstValueFrom, Observable } from 'rxjs';
 import {
   CustodySignedTransaction,
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
-import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
+import { SignSwapTransactionThoughtBridge, SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
@@ -39,6 +39,17 @@ export class TransactionsService {
     return await firstValueFrom(
       this.privateServerQueue.send<CustodySignedTransaction>(
         { cmd: _MessagePatterns.signTransaction },
+        privateServerSignTransaction,
+      ),
+    );
+  }
+
+  private async getSignedSwapTransactionFromPrivateServer(
+    privateServerSignTransaction: PrivateServerSignTransactionDto,
+  ) {
+    return await firstValueFrom(
+      this.privateServerQueue.send<CustodySignedTransaction>(
+        { cmd: _MessagePatterns.signSwapTransaction },
         privateServerSignTransaction,
       ),
     );
@@ -133,7 +144,7 @@ export class TransactionsService {
       const index = keyPart.indexOf(BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER);
       return {
         index: parseInt(keyPart.slice(0, index), 10),
-        key: keyPart.slice(index + 1), 
+        key: keyPart.slice(index + 1),
       }
     })
       .sort((a, b) => a.index - b.index)
@@ -147,6 +158,19 @@ export class TransactionsService {
     const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
 
     return this.getSignedTransactionFromPrivateServer(
+      {
+        keyPart: backupStoragesKey,
+        ...dto.signTransaction,
+      },
+    );
+  }
+
+  async signSwapTransactionThroughBridge(
+    dto: SignSwapTransactionThoughtBridge,
+  ): Promise<CustodySignedTransaction> {
+    const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
+
+    return this.getSignedSwapTransactionFromPrivateServer(
       {
         keyPart: backupStoragesKey,
         ...dto.signTransaction,
