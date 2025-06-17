@@ -1,7 +1,7 @@
 import { TransactionsService } from './transactions.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
-import { SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
+import { SignSwapTransactionThoughtBridge, SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import {
   CustodySignedTransaction,
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
 
 @RmqController()
 export class TransactionsRMQController {
-  constructor(private transactionService: TransactionsService) {}
+  constructor(private transactionService: TransactionsService) { }
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.signTransaction })
   async signTransactionThoughtBridge(
@@ -26,5 +26,12 @@ export class TransactionsRMQController {
     @Payload() dto: SignContractTransactionDto,
   ): Observable<ICustodySignedContractTransaction> {
     return this.transactionService.signContractTransactionThroughBridge(dto);
+  }
+
+  @MessagePattern({ cmd: _MessagePatterns.bridge.signSwapTransaction })
+  async signSwapTransactionThoughtBridge(
+    @Payload() dto: SignSwapTransactionThoughtBridge,
+  ): Promise<CustodySignedTransaction> {
+    return this.transactionService.signSwapTransactionThroughBridge(dto);
   }
 }
