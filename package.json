@@ -57,7 +57,8 @@
     "tronweb": "^6.0.0",
     "typeorm": "^0.3.20",
     "viem": "^2.30.5",
-    "web3": "^4.16.0"
+    "web3": "^4.16.0",
+    "xrpl": "^4.3.0"
   },
   "devDependencies": {
     "@nestjs/cli": "^10.0.0",
