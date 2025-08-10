@@ -84,6 +84,9 @@ export class PrivateServerService {
       ),
     );
 
+    if (key.alreadyGenerated)
+      return key;
+
     const keysParts = this.splitKeyForBackupStorages(
       key.backupStoragesPart,
       payload.apiApprovalEssential.backupStoragesIds,
