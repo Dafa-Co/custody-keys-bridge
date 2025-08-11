@@ -77,12 +77,15 @@ export class PrivateServerService {
   ): Promise<ICustodyKeyPairResponse> {
     const { corporateId, vaultId } = payload;
 
+    this.logger.info(`[BRIDGE] generateKey: ${JSON.stringify(payload)}`);
     const key = await firstValueFrom(
       this.privateServerQueue.send<IGenerateKeyPairResponse>(
         { cmd: _MessagePatterns.generateKey },
         payload,
       ),
     );
+
+    this.logger.info(`[BRIDGE] generateKey result: ${JSON.stringify(key)}`);
 
     if (key.alreadyGenerated)
       return key;
