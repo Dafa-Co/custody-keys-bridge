@@ -158,26 +158,30 @@ export class TransactionsService {
       .join('');
   }
 
+  private async fillSignersPrivateKeysParts(
+    signers: ITransactionSigner[],
+    corporateId: number,
+  ) {
+    return Promise.all(
+      signers.map(async (signer) => {
+        const keyPart = await this.getKeyFromApiApprovalForSigning(signer, corporateId);
+        return {
+          ...signer,
+          keyPart,
+        };
+      }),
+    );
+  }
+
   async signTransactionThroughBridge(
     dto: SignTransactionDto,
   ): Promise<CustodySignedTransaction> {
-    let privateServerSigners: IPrivateServerTransactionSigner[] = [];
-    for (const signer of dto.signers) {
-      const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(
-        signer,
-        dto.corporateId,
-      );
-
-      privateServerSigners.push({
-        ...signer,
-        keyPart: backupStoragesKey,
-      })
-    }
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
 
     return this.getSignedTransactionFromPrivateServer(
       {
         ...dto,
-        signers: privateServerSigners,
+        signers,
       },
     );
   }
@@ -185,23 +189,12 @@ export class TransactionsService {
   async signSwapTransactionThroughBridge(
     dto: SignSwapTransactionDto,
   ): Promise<CustodySignedTransaction> {
-    let privateServerSigners: IPrivateServerTransactionSigner[] = [];
-    for (const signer of dto.signers) {
-      const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(
-        signer,
-        dto.corporateId,
-      );
-
-      privateServerSigners.push({
-        ...signer,
-        keyPart: backupStoragesKey,
-      })
-    }
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
 
     return this.getSignedSwapTransactionFromPrivateServer(
       {
         ...dto,
-        signers: privateServerSigners,
+        signers,
       },
     );
   }
@@ -209,25 +202,14 @@ export class TransactionsService {
   async signContractTransactionThroughBridge(
     dto: ISignContractTransaction,
   ): Promise<ICustodySignedContractTransaction> {
-    let privateServerSigners: IPrivateServerTransactionSigner[] = [];
-    for (const signer of dto.signers) {
-      const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(
-        signer,
-        dto.corporateId,
-      );
-
-      privateServerSigners.push({
-        ...signer,
-        keyPart: backupStoragesKey,
-      })
-    }
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
 
     return await firstValueFrom(
       this.privateServerQueue.send<ICustodySignedContractTransaction>(
         { cmd: _MessagePatterns.signContractTransaction },
         {
           ...dto,
-          signers: privateServerSigners,
+          signers,
         },
       ),
     );
