@@ -1,36 +1,36 @@
 import { TransactionsService } from './transactions.service';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
-import { SignSwapTransactionThoughtBridge, SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import {
   CustodySignedTransaction,
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
 import { RmqController } from 'rox-custody_common-modules/libs/decorators/rmq-controller.decorator';
-import { SignContractTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { ICustodySignedContractTransaction } from 'rox-custody_common-modules/libs/interfaces/contract-transaction.interface';
 import { Observable } from 'rxjs';
+import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
+import { SignSwapTransactionDto, SignTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-transaction.interface';
 
 @RmqController()
 export class TransactionsRMQController {
   constructor(private transactionService: TransactionsService) { }
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.signTransaction })
-  async signTransactionThoughtBridge(
-    @Payload() dto: SignTransactionThoughtBridge,
+  async signTransactionThroughBridge(
+    @Payload() dto: SignTransactionDto,
   ): Promise<CustodySignedTransaction> {
     return this.transactionService.signTransactionThroughBridge(dto);
   }
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.signContractTransaction })
-  signContractTransactionThroughBridge(
-    @Payload() dto: SignContractTransactionDto,
-  ): Observable<ICustodySignedContractTransaction> {
+  async signContractTransactionThroughBridge(
+    @Payload() dto: ISignContractTransaction,
+  ): Promise<ICustodySignedContractTransaction> {
     return this.transactionService.signContractTransactionThroughBridge(dto);
   }
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.signSwapTransaction })
-  async signSwapTransactionThoughtBridge(
-    @Payload() dto: SignSwapTransactionThoughtBridge,
+  async signSwapTransactionThroughBridge(
+    @Payload() dto: SignSwapTransactionDto,
   ): Promise<CustodySignedTransaction> {
     return this.transactionService.signSwapTransactionThroughBridge(dto);
   }
