@@ -1,7 +1,11 @@
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import {
+  IPrivateServerTransactionSigner,
+  ITransactionSigner,
   PrivateServerSignTransactionDto,
+  SignSwapTransactionDto,
+  SignTransactionDto,
 } from 'rox-custody_common-modules/libs/interfaces/sign-transaction.interface';
 import { _MessagePatterns } from 'rox-custody_common-modules/libs/utils/microservice-constants';
 import { ClientProxy } from '@nestjs/microservices';
@@ -10,11 +14,9 @@ import { firstValueFrom, Observable } from 'rxjs';
 import {
   CustodySignedTransaction,
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
-import { SignSwapTransactionThoughtBridge, SignTransactionThoughtBridge } from 'rox-custody_common-modules/libs/interfaces/sign-transaction-throght-bridge.interface';
 import { BackupStorageIntegrationService } from 'src/backup-storage-integration/backup-storage-integration.service';
 import { IRequestDataFromApiApproval } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
-import { SignContractTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { ICustodySignedContractTransaction } from 'rox-custody_common-modules/libs/interfaces/contract-transaction.interface';
 import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
 import { BackupStorage } from 'src/backup-storage-integration/entities/backup-storage.entity';
@@ -23,6 +25,7 @@ import { configs } from 'src/configs/configs';
 import { AssetType } from 'rox-custody_common-modules/libs/entities/asset.entity';
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-integration/constants/backup-storage.constants';
 import { softJsonStringify } from 'rox-custody_common-modules/libs/utils/soft-json-stringify.utils';
+import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -74,17 +77,20 @@ export class TransactionsService {
   }
 
   private async getKeyFromApiApprovalForSigning(
-    dto: SignTransactionThoughtBridge,
+    signer: ITransactionSigner,
+    corporateId: number,
   ): Promise<string> {
-    const { signTransaction, requestFromApiApproval: { backupStoragesIds } } = dto;
+    const { keyId, vaultId, requestFromApiApproval } = signer;
 
-    if (!backupStoragesIds?.length) {
+    const backupStoragesIds = requestFromApiApproval?.backupStoragesIds;
+
+    if (!backupStoragesIds || !backupStoragesIds.length) {
       return '';
     }
 
     const backupStorageInfo = await this.backupStorageIntegrationService.getBackupStoragesInfo(
       backupStoragesIds,
-      signTransaction.corporateId,
+      corporateId,
       true,
     );
 
@@ -94,7 +100,7 @@ export class TransactionsService {
       backupStorageInfo.map((backupStorage) => {
         const folderName = getEnvFolderName(
           backupStorage.corporateId,
-          signTransaction.vaultId,
+          vaultId,
           configs.NODE_ENV,
           backupStorage.id
         );
@@ -103,7 +109,7 @@ export class TransactionsService {
           activeSessions: backupStorage.activeSessions.map(({ sessionKey }) => sessionKey),
           folderName,
           backupStorageId: backupStorage.id,
-          privateKeyId: signTransaction.keyId,
+          privateKeyId: keyId,
           url: backupStorage.url,
         })
       }));
@@ -153,37 +159,77 @@ export class TransactionsService {
   }
 
   async signTransactionThroughBridge(
-    dto: SignTransactionThoughtBridge,
+    dto: SignTransactionDto,
   ): Promise<CustodySignedTransaction> {
-    const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
+    let privateServerSigners: IPrivateServerTransactionSigner[] = [];
+    for (const signer of dto.signers) {
+      const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(
+        signer,
+        dto.corporateId,
+      );
+
+      privateServerSigners.push({
+        ...signer,
+        keyPart: backupStoragesKey,
+      })
+    }
 
     return this.getSignedTransactionFromPrivateServer(
       {
-        keyPart: backupStoragesKey,
-        ...dto.signTransaction,
+        ...dto,
+        signers: privateServerSigners,
       },
     );
   }
 
   async signSwapTransactionThroughBridge(
-    dto: SignSwapTransactionThoughtBridge,
+    dto: SignSwapTransactionDto,
   ): Promise<CustodySignedTransaction> {
-    const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(dto);
+    let privateServerSigners: IPrivateServerTransactionSigner[] = [];
+    for (const signer of dto.signers) {
+      const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(
+        signer,
+        dto.corporateId,
+      );
+
+      privateServerSigners.push({
+        ...signer,
+        keyPart: backupStoragesKey,
+      })
+    }
 
     return this.getSignedSwapTransactionFromPrivateServer(
       {
-        keyPart: backupStoragesKey,
-        ...dto.signTransaction,
+        ...dto,
+        signers: privateServerSigners,
       },
     );
   }
 
-  signContractTransactionThroughBridge(
-    dto: SignContractTransactionDto,
-  ): Observable<ICustodySignedContractTransaction> {
-    return this.privateServerQueue.send<ICustodySignedContractTransaction>(
-      { cmd: _MessagePatterns.signContractTransaction },
-      dto,
+  async signContractTransactionThroughBridge(
+    dto: ISignContractTransaction,
+  ): Promise<ICustodySignedContractTransaction> {
+    let privateServerSigners: IPrivateServerTransactionSigner[] = [];
+    for (const signer of dto.signers) {
+      const backupStoragesKey = await this.getKeyFromApiApprovalForSigning(
+        signer,
+        dto.corporateId,
+      );
+
+      privateServerSigners.push({
+        ...signer,
+        keyPart: backupStoragesKey,
+      })
+    }
+
+    return await firstValueFrom(
+      this.privateServerQueue.send<ICustodySignedContractTransaction>(
+        { cmd: _MessagePatterns.signContractTransaction },
+        {
+          ...dto,
+          signers: privateServerSigners,
+        },
+      ),
     );
   }
 
