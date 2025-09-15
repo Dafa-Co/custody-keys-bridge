@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import {
@@ -26,6 +27,8 @@ import { AssetType } from 'rox-custody_common-modules/libs/entities/asset.entity
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-integration/constants/backup-storage.constants';
 import { softJsonStringify } from 'rox-custody_common-modules/libs/utils/soft-json-stringify.utils';
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
+import { ISignMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
+import { ICustodyMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -207,6 +210,21 @@ export class TransactionsService {
     return await firstValueFrom(
       this.privateServerQueue.send<ICustodySignedContractTransaction>(
         { cmd: _MessagePatterns.signContractTransaction },
+        {
+          ...dto,
+          signers,
+        },
+      ),
+    );
+  }
+
+  async mintTokenTransactionThroughBridge(dto: ISignMintTokenTransaction,
+  ): Promise<ICustodyMintTokenTransaction> {
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
+
+    return await firstValueFrom(
+      this.privateServerQueue.send<ICustodySignedContractTransaction>(
+        { cmd: _MessagePatterns.signMintTokenTransaction },
         {
           ...dto,
           signers,
