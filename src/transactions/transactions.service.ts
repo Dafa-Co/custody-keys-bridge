@@ -29,6 +29,8 @@ import { softJsonStringify } from 'rox-custody_common-modules/libs/utils/soft-js
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { ISignMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
 import { ICustodyMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
+import { ISignBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-burn-token-transaction.interface';
+import { ICustodyBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/burn-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -223,7 +225,22 @@ export class TransactionsService {
     const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
 
     return await firstValueFrom(
-      this.privateServerQueue.send<ICustodySignedContractTransaction>(
+      this.privateServerQueue.send<ICustodyMintTokenTransaction>(
+        { cmd: _MessagePatterns.signMintTokenTransaction },
+        {
+          ...dto,
+          signers,
+        },
+      ),
+    );
+  }
+
+  async burnTokenTransactionThroughBridge(dto: ISignBurnTokenTransaction,
+  ): Promise<ICustodyBurnTokenTransaction> {
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
+
+    return await firstValueFrom(
+      this.privateServerQueue.send<ICustodyBurnTokenTransaction>(
         { cmd: _MessagePatterns.signMintTokenTransaction },
         {
           ...dto,
