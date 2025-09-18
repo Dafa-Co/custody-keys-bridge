@@ -23,14 +23,12 @@ import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/s
 import { BackupStorage } from 'src/backup-storage-integration/entities/backup-storage.entity';
 import { getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-approval';
 import { configs } from 'src/configs/configs';
-import { AssetType } from 'rox-custody_common-modules/libs/entities/asset.entity';
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-integration/constants/backup-storage.constants';
-import { softJsonStringify } from 'rox-custody_common-modules/libs/utils/soft-json-stringify.utils';
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
-import { ISignMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
-import { ICustodyMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 import { ISignBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-burn-token-transaction.interface';
 import { ICustodyBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/burn-transaction.interface';
+import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
+import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -220,12 +218,12 @@ export class TransactionsService {
     );
   }
 
-  async mintTokenTransactionThroughBridge(dto: ISignMintTokenTransaction,
-  ): Promise<ICustodyMintTokenTransaction> {
+  async mintTokenTransactionThroughBridge(dto: ISignMintOrBurnTokenTransaction,
+  ): Promise<ICustodyMintOrBurnTokenTransaction> {
     const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
 
     return await firstValueFrom(
-      this.privateServerQueue.send<ICustodyMintTokenTransaction>(
+      this.privateServerQueue.send<ICustodyMintOrBurnTokenTransaction>(
         { cmd: _MessagePatterns.signMintTokenTransaction },
         {
           ...dto,
@@ -241,7 +239,7 @@ export class TransactionsService {
 
     return await firstValueFrom(
       this.privateServerQueue.send<ICustodyBurnTokenTransaction>(
-        { cmd: _MessagePatterns.signMintTokenTransaction },
+        { cmd: _MessagePatterns.signBurnTokenTransaction },
         {
           ...dto,
           signers,

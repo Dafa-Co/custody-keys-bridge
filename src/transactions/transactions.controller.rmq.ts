@@ -10,10 +10,10 @@ import { ICustodySignedContractTransaction } from 'rox-custody_common-modules/li
 import { Observable } from 'rxjs';
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { SignSwapTransactionDto, SignTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-transaction.interface';
-import { ISignMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
-import { ICustodyMintTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 import { ISignBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-burn-token-transaction.interface';
 import { ICustodyBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/burn-transaction.interface';
+import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
+import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 
 @RmqController()
 export class TransactionsRMQController {
@@ -35,8 +35,8 @@ export class TransactionsRMQController {
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.mintTokenTransaction })
   async mintTokenTransactionThroughBridge(
-    @Payload() dto: ISignMintTokenTransaction,
-  ): Promise<ICustodyMintTokenTransaction> {
+    @Payload() dto: ISignMintOrBurnTokenTransaction,
+  ): Promise<ICustodyMintOrBurnTokenTransaction> {
     return this.transactionService.mintTokenTransactionThroughBridge(dto);
   }
 
