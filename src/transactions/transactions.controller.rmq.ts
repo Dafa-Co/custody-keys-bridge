@@ -7,11 +7,8 @@ import {
 } from 'rox-custody_common-modules/libs/interfaces/custom-signed-transaction.type';
 import { RmqController } from 'rox-custody_common-modules/libs/decorators/rmq-controller.decorator';
 import { ICustodySignedContractTransaction } from 'rox-custody_common-modules/libs/interfaces/contract-transaction.interface';
-import { Observable } from 'rxjs';
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { SignSwapTransactionDto, SignTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-transaction.interface';
-import { ISignBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-burn-token-transaction.interface';
-import { ICustodyBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/burn-transaction.interface';
 import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
 import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 
@@ -42,8 +39,8 @@ export class TransactionsRMQController {
 
   @MessagePattern({ cmd: _MessagePatterns.bridge.burnTokenTransaction })
   async burnTokenTransactionThroughBridge(
-    @Payload() dto: ISignBurnTokenTransaction,
-  ): Promise<ICustodyBurnTokenTransaction> {
+    @Payload() dto: ISignMintOrBurnTokenTransaction,
+  ): Promise<ICustodyMintOrBurnTokenTransaction> {
     return this.transactionService.burnTokenTransactionThroughBridge(dto);
   }
 

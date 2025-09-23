@@ -25,8 +25,6 @@ import { getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-appr
 import { configs } from 'src/configs/configs';
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-integration/constants/backup-storage.constants';
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
-import { ISignBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-burn-token-transaction.interface';
-import { ICustodyBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/burn-transaction.interface';
 import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
 import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 
@@ -233,12 +231,12 @@ export class TransactionsService {
     );
   }
 
-  async burnTokenTransactionThroughBridge(dto: ISignBurnTokenTransaction,
-  ): Promise<ICustodyBurnTokenTransaction> {
+  async burnTokenTransactionThroughBridge(dto: ISignMintOrBurnTokenTransaction,
+  ): Promise<ICustodyMintOrBurnTokenTransaction> {
     const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
 
     return await firstValueFrom(
-      this.privateServerQueue.send<ICustodyBurnTokenTransaction>(
+      this.privateServerQueue.send<ICustodyMintOrBurnTokenTransaction>(
         { cmd: _MessagePatterns.signBurnTokenTransaction },
         {
           ...dto,
