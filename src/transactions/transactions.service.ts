@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { TenantService } from 'src/libs/decorators/tenant-service.decorator';
 import { ContextualRabbitMQService } from 'src/libs/tenancy/context-rmq';
 import {
@@ -22,10 +23,10 @@ import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/s
 import { BackupStorage } from 'src/backup-storage-integration/entities/backup-storage.entity';
 import { getEnvFolderName } from 'rox-custody_common-modules/libs/utils/api-approval';
 import { configs } from 'src/configs/configs';
-import { AssetType } from 'rox-custody_common-modules/libs/entities/asset.entity';
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-integration/constants/backup-storage.constants';
-import { softJsonStringify } from 'rox-custody_common-modules/libs/utils/soft-json-stringify.utils';
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
+import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
+import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -207,6 +208,36 @@ export class TransactionsService {
     return await firstValueFrom(
       this.privateServerQueue.send<ICustodySignedContractTransaction>(
         { cmd: _MessagePatterns.signContractTransaction },
+        {
+          ...dto,
+          signers,
+        },
+      ),
+    );
+  }
+
+  async mintTokenTransactionThroughBridge(dto: ISignMintOrBurnTokenTransaction,
+  ): Promise<ICustodyMintOrBurnTokenTransaction> {
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
+
+    return await firstValueFrom(
+      this.privateServerQueue.send<ICustodyMintOrBurnTokenTransaction>(
+        { cmd: _MessagePatterns.signMintTokenTransaction },
+        {
+          ...dto,
+          signers,
+        },
+      ),
+    );
+  }
+
+  async burnTokenTransactionThroughBridge(dto: ISignMintOrBurnTokenTransaction,
+  ): Promise<ICustodyMintOrBurnTokenTransaction> {
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
+
+    return await firstValueFrom(
+      this.privateServerQueue.send<ICustodyMintOrBurnTokenTransaction>(
+        { cmd: _MessagePatterns.signBurnTokenTransaction },
         {
           ...dto,
           signers,
