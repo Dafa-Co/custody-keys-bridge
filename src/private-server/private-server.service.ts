@@ -26,26 +26,16 @@ export class PrivateServerService {
   ) { }
 
   private splitKeyForBackupStorages(
-    key: string,
+    key: string[],
     backupStoragesIds: number[],
   ) {
-    const backupStorageParts: { backupStorageId: number; privateKeySlice: string }[] = [];
+    const backupStorageParts: { backupStorageId: number; privateKeyShare: string }[] = [];
 
     if (backupStoragesIds.length > 0) {
-      let remainingKey = key;
-
       for (let i = 0; i < backupStoragesIds.length; i++) {
-        const isLastStorage = i === backupStoragesIds.length - 1;
-        const currentSplitSize = isLastStorage
-          ? remainingKey.length
-          : Math.ceil(remainingKey.length / (backupStoragesIds.length - i));
-
-        const part = remainingKey.substring(0, currentSplitSize);
-        remainingKey = remainingKey.substring(currentSplitSize);
-
         backupStorageParts.push({
           backupStorageId: backupStoragesIds[i],
-          privateKeySlice: part
+          privateKeyShare: key[i]
         });
       }
     }
@@ -88,7 +78,7 @@ export class PrivateServerService {
       return key;
 
     const keysParts = this.splitKeyForBackupStorages(
-      key.backupStoragesPart,
+      key.backupStoragesParts,
       payload.apiApprovalEssential.backupStoragesIds,
     );
 
@@ -105,7 +95,7 @@ export class PrivateServerService {
 
         // store the key to the Api Approval
         await Promise.all(
-          keysParts.map(async ({ backupStorageId, privateKeySlice }, index) => {
+          keysParts.map(async ({ backupStorageId, privateKeyShare }, index) => {
             const backupStorage = backupStorages.find(
               (backupStorage) => backupStorage.id === backupStorageId
             );
@@ -128,7 +118,7 @@ export class PrivateServerService {
                 folderName,
               ),
               sliceIndex: index,
-              privateKeySlice,
+              privateKeySlice: privateKeyShare,
               activeSessions: backupStorage.activeSessions.map(
                 (activeSession) => activeSession.sessionKey
               ),

@@ -95,7 +95,7 @@ export class BackupStorageIntegrationService {
 
     const payload = {
       key_id: dto.privateKeyId,
-      key: `${sliceIndex}${BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER}${privateKeySlice}`
+      key: privateKeySlice
     }
 
     return this.communicatingWithBackupStorageForKeyManagement<void>({

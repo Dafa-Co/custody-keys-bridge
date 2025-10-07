@@ -80,13 +80,13 @@ export class TransactionsService {
   private async getKeyFromApiApprovalForSigning(
     signer: ITransactionSigner,
     corporateId: number,
-  ): Promise<string> {
+  ): Promise<string[]> {
     const { keyId, vaultId, requestFromApiApproval } = signer;
 
     const backupStoragesIds = requestFromApiApproval?.backupStoragesIds;
 
     if (!backupStoragesIds || !backupStoragesIds.length) {
-      return '';
+      return [];
     }
 
     const backupStorageInfo = await this.backupStorageIntegrationService.getBackupStoragesInfo(
@@ -147,16 +147,7 @@ export class TransactionsService {
         return fulfilledResponse.value;
       });
 
-    return keyParts.map((keyPart) => {
-      const index = keyPart.indexOf(BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER);
-      return {
-        index: parseInt(keyPart.slice(0, index), 10),
-        key: keyPart.slice(index + 1),
-      }
-    })
-      .sort((a, b) => a.index - b.index)
-      .map((keyPart) => keyPart.key)
-      .join('');
+    return keyParts;
   }
 
   private async fillSignersPrivateKeysParts(
