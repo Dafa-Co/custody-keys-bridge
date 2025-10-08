@@ -117,8 +117,7 @@ export class PrivateServerService {
                 backupStorageConnectionTypes.setKey,
                 folderName,
               ),
-              sliceIndex: index,
-              privateKeySlice: privateKeyShare,
+              privateKeyShare,
               activeSessions: backupStorage.activeSessions.map(
                 (activeSession) => activeSession.sessionKey
               ),

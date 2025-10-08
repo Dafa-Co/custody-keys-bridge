@@ -91,11 +91,11 @@ export class BackupStorageIntegrationService {
   }
 
   async storeKeyToApiApproval(dto: ISendRequestToBackupStorage): Promise<void> {
-    const { url, sliceIndex, privateKeySlice, activeSessions, privateKeyId, backupStorageId } = dto;
+    const { url, privateKeyShare, activeSessions, privateKeyId, backupStorageId } = dto;
 
     const payload = {
       key_id: dto.privateKeyId,
-      key: privateKeySlice
+      key: privateKeyShare
     }
 
     return this.communicatingWithBackupStorageForKeyManagement<void>({
