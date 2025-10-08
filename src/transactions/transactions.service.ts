@@ -156,10 +156,10 @@ export class TransactionsService {
   ) {
     return Promise.all(
       signers.map(async (signer) => {
-        const keyPart = await this.getKeyFromApiApprovalForSigning(signer, corporateId);
+        const keyParts = await this.getKeyFromApiApprovalForSigning(signer, corporateId);
         return {
           ...signer,
-          keyPart,
+          keyParts,
         };
       }),
     );
