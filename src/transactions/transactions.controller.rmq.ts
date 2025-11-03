@@ -11,6 +11,8 @@ import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interf
 import { SignSwapTransactionDto, SignTransactionDto } from 'rox-custody_common-modules/libs/interfaces/sign-transaction.interface';
 import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
 import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
+import { ICustodyTransferNFTTransaction } from 'rox-custody_common-modules/libs/interfaces/transfer-nft-transaction.interface';
+import { ISignTransferNFTTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-transfer-nft-transaction.interface';
 
 @RmqController()
 export class TransactionsRMQController {
@@ -49,5 +51,12 @@ export class TransactionsRMQController {
     @Payload() dto: SignSwapTransactionDto,
   ): Promise<CustodySignedTransaction> {
     return this.transactionService.signSwapTransactionThroughBridge(dto);
+  }
+
+  @MessagePattern({ cmd: _MessagePatterns.bridge.signTransferNFTTransaction })
+  async signTransferNFTTransactionThroughBridge(
+    @Payload() dto: ISignTransferNFTTransaction,
+  ): Promise<ICustodyTransferNFTTransaction> {
+    return this.transactionService.signTransferNFTTransactionThroughBridge(dto);
   }
 }
