@@ -27,6 +27,8 @@ import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from 'src/backup-storage-int
 import { ISignContractTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-contract-transaction.interface';
 import { ISignMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-mint-token-transaction.interface';
 import { ICustodyMintOrBurnTokenTransaction } from 'rox-custody_common-modules/libs/interfaces/mint-transaction.interface';
+import { ISignTransferNFTTransaction } from 'rox-custody_common-modules/libs/interfaces/sign-transfer-nft-transaction.interface';
+import { ICustodyTransferNFTTransaction } from 'rox-custody_common-modules/libs/interfaces/transfer-nft-transaction.interface';
 
 @TenantService()
 export class TransactionsService {
@@ -255,5 +257,19 @@ export class TransactionsService {
     };
 
     return requestFromApiApproval;
+  }
+
+  async signTransferNFTTransactionThroughBridge(dto: ISignTransferNFTTransaction): Promise<ICustodyTransferNFTTransaction> {
+    const signers = await this.fillSignersPrivateKeysParts(dto.signers, dto.corporateId);
+
+    return await firstValueFrom(
+      this.privateServerQueue.send<ICustodyMintOrBurnTokenTransaction>(
+        { cmd: _MessagePatterns.signTransferNFTTransaction },
+        {
+          ...dto,
+          signers,
+        },
+      ),
+    );
   }
 }
