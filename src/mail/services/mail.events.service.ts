@@ -18,6 +18,7 @@ export class MailsEventsService {
   async sendEmail<StrategyType extends keyof typeof MailStrategyPayloads>(
     emailEvent: ISendEmailEvent<StrategyType>,
   ) {
+    
     // Create mail options using the existing factory
     const mailOptions = await this.mailOptionsFactory.create(
       emailEvent.type,
