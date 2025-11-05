@@ -1,4 +1,3 @@
-
 import { Injectable, Logger } from '@nestjs/common';
 import { EmailProvider } from '../enums/email-provider.enum';
 import {
@@ -24,9 +23,8 @@ export class EmailProviderFactory {
       [EmailProvider.BREVO, brevoStrategy],
     ]);
 
-    // Define fallback order from config or default
     this.fallbackOrder = this.parseFallbackOrder(
-      'Brevo,SendGrid', // configs.EMAIL_PROVIDER_FALLBACK_ORDER
+      configs.EMAIL_PROVIDER_FALLBACK_ORDER,
     );
 
     this.logger.log(
@@ -59,7 +57,6 @@ export class EmailProviderFactory {
         this.logger.log(`Attempting to send email via ${provider}...`);
         const strategy = this.getProvider(provider);
 
-        // Try to send
         await strategy.send(emailData);
 
         this.logger.log(`Email sent successfully via ${provider}`);
@@ -69,12 +66,10 @@ export class EmailProviderFactory {
         this.logger.error(`Failed to send via ${provider}: ${error.message}`);
         errors.push({ provider, error });
 
-        // Continue to next provider
         continue;
       }
     }
 
-    // All providers failed
     const errorMessage = errors
       .map((e) => `${e.provider}: ${e.error.message}`)
       .join('; ');

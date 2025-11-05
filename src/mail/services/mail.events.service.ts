@@ -18,15 +18,12 @@ export class MailsEventsService {
   async sendEmail<StrategyType extends keyof typeof MailStrategyPayloads>(
     emailEvent: ISendEmailEvent<StrategyType>,
   ) {
-    
-    // Create mail options using the existing factory
     const mailOptions = await this.mailOptionsFactory.create(
       emailEvent.type,
       emailEvent.emails,
       emailEvent.payload,
     );
 
-    // Send with automatic fallback
     const result = await this.emailProviderFactory.sendWithFallback({
       from: {
         name: configs.EMAIL_SENDER_NAME,

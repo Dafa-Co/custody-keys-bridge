@@ -27,8 +27,7 @@ export class SendGridEmailProviderStrategy implements IEmailProviderStrategy {
       text: emailData.text,
       html: emailData.html,
     };
-
     await sgMail.send(mailOptions);
-    this.logger.log(`Email sent successfully via SendGrid to ${emailData.to}`);
+    this.logger.log(`Email sent succes sfully via SendGrid to ${emailData.to}`);
   }
 }

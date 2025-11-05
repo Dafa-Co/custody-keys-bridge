@@ -34,4 +34,5 @@ export const configs = {
   EMAIL_SENDER: process.env.EMAIL_SENDER,
   EMAIL_SENDER_NAME: process.env.EMAIL_SENDER_NAME,
   BREVO_API_KEY: process.env.BREVO_API_KEY,
+  EMAIL_PROVIDER_FALLBACK_ORDER: process.env.EMAIL_PROVIDER_FALLBACK_ORDER,
 };
