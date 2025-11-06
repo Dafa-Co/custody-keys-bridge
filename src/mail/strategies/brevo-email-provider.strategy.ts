@@ -4,7 +4,11 @@ import {
   IEmailOptions,
 } from '../interfaces/email-provider-strategy.interface';
 import { EmailProvider } from '../enums/email-provider.enum';
-import { SendSmtpEmail, TransactionalEmailsApi, TransactionalEmailsApiApiKeys } from '@getbrevo/brevo';
+import {
+  SendSmtpEmail,
+  TransactionalEmailsApi,
+  TransactionalEmailsApiApiKeys,
+} from '@getbrevo/brevo';
 import { configs } from 'src/configs/configs';
 
 @Injectable()
@@ -25,8 +29,6 @@ export class BrevoEmailProviderStrategy implements IEmailProviderStrategy {
   }
 
   async send(mailOptions: IEmailOptions): Promise<void> {
-    // TODO : romve return
-    return
     const sendSmtpEmail = this.mapToBrevoEmail(mailOptions);
     await this.emailAPI.sendTransacEmail(sendSmtpEmail);
   }

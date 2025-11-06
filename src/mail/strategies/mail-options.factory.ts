@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { VerifyKeyOptionsStrategy } from "./verify-key.strategy";
 import { MailStrategy } from "../enums/mail-strategy.enum";
-import { MailDataRequired } from "@sendgrid/mail";
 import { configs } from "src/configs/configs";
 import { IPartialMailOptions } from "../interfaces/mails-options-strategy.interface";
 
@@ -11,7 +10,7 @@ export class MailOptionsFactory {
         private readonly verifyKeyStrategy: VerifyKeyOptionsStrategy,
     ) {}
 
-    async create(type: MailStrategy, emails: string[], payload: any): Promise<MailDataRequired> {
+    async create(type: MailStrategy, emails: string[], payload: any): Promise<any> {
         let mailsOptions: IPartialMailOptions;
 
         switch (type) {
