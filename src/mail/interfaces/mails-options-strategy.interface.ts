@@ -1,19 +1,19 @@
 import { VerifyKeyEmailStrategyPayload } from "src/libs/dto/verify-key-email-strategy-payload.dto";
 import { MailStrategy } from "../enums/mail-strategy.enum";
 
-export interface IMailsStrategy<StrategyType extends keyof typeof EmailsStrategies> {
+export interface IMailOptionsStrategy<StrategyType extends keyof typeof MailStrategyPayloads> {
     getMailOptions(
-        payload: InstanceType<(typeof EmailsStrategies)[StrategyType]>,
-    ): Promise<IMailStrategyReturnedData>;
+        payload: InstanceType<(typeof MailStrategyPayloads)[StrategyType]>,
+    ): Promise<IPartialMailOptions>;
 }
 
-export interface IMailStrategyReturnedData {
+export interface IPartialMailOptions {
     subject: string;
     text: string;
     html: string;
 }
 
 
-export const EmailsStrategies = {
+export const MailStrategyPayloads = {
     [MailStrategy.VERIFY_KEY]: VerifyKeyEmailStrategyPayload,
 }
