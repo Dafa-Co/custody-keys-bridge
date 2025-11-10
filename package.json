@@ -27,8 +27,8 @@
   },
   "dependencies": {
     "@biconomy/account": "^4.5.7",
+    "@getbrevo/brevo": "^3.0.1",
     "@golevelup/nestjs-rabbitmq": "~5.4.0",
-    "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/axios": "^3.0.3",
     "@nestjs/class-validator": "^0.13.4",
     "@nestjs/common": "^10.0.0",
@@ -41,7 +41,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.2",
     "@polkadot/util-crypto": "^13.5.4",
-    "@sendgrid/mail": "^8.1.4",
+    "@sendgrid/mail": "^8.1.6",
     "@slack/webhook": "^7.0.4",
     "@solana/web3.js": "^1.98.2",
     "@stellar/stellar-sdk": "^13.3.0",

@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
-import { VerifyKeyStrategy } from "./verify-key.strategy";
-import { MailsStrategiesService } from "./mails-strategies.service";
+import { VerifyKeyOptionsStrategy } from "./verify-key.strategy";
+import { MailOptionsFactory } from "./mail-options.factory";
 
 @Module({
-    providers: [VerifyKeyStrategy, MailsStrategiesService],
-    exports: [MailsStrategiesService],
+    providers: [VerifyKeyOptionsStrategy, MailOptionsFactory],
+    exports: [MailOptionsFactory],
 })
 export class MailsStrategiesModule { }
