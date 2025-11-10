@@ -25,6 +25,10 @@ export const configs = {
     DATABASE_PASSWORD: process.env.DATABASE_PASSWORD,
     DATABASE_PORT: process.env.DATABASE_PORT,
 
+    // Mail configuration
+    EMAIL_SENDER: process.env.EMAIL_SENDER,
+    EMAIL_SENDER_NAME: process.env.EMAIL_SENDER_NAME,
+    BREVO_API_KEY: process.env.BREVO_API_KEY,
     SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-    SENDGRID_EMAIL: process.env.SENDGRID_EMAIL,
+    EMAIL_PROVIDER_FALLBACK_ORDER: process.env.EMAIL_PROVIDER_FALLBACK_ORDER,
 }

@@ -24,7 +24,7 @@ export class MailsStrategiesService {
         
         return {
             ...mailsOptions,
-            from: `RoxCustody <${configs.SENDGRID_EMAIL}>`,
+            from: `RoxCustody <${configs.EMAIL_SENDER}>`,
             to: emails,
         };
     }
