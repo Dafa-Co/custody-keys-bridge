@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { VerifyKeyOptionsStrategy } from "./verify-key.strategy";
+import { VerifyKeyMailOptionsStrategy } from "./verify-key.strategy";
 import { MailStrategy } from "../enums/mail-strategy.enum";
 import { configs } from "src/configs/configs";
 import { IPartialMailOptions } from "../interfaces/mails-options-strategy.interface";
@@ -7,7 +7,7 @@ import { IPartialMailOptions } from "../interfaces/mails-options-strategy.interf
 @Injectable()
 export class MailOptionsFactory {
     constructor(
-        private readonly verifyKeyStrategy: VerifyKeyOptionsStrategy,
+        private readonly verifyKeyStrategy: VerifyKeyMailOptionsStrategy,
     ) {}
 
     async create(type: MailStrategy, emails: string[], payload: any): Promise<any> {
@@ -22,9 +22,12 @@ export class MailOptionsFactory {
         }
         
         return {
-            ...mailsOptions,
-            from: `RoxCustody <${configs.SENDGRID_EMAIL}>`,
-            to: emails,
+          ...mailsOptions,
+          from: {
+            name: configs.EMAIL_SENDER_NAME,
+            email: configs.EMAIL_SENDER,
+          },
+          to: emails,
         };
     }
 }

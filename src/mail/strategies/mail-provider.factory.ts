@@ -6,25 +6,29 @@ import {
 } from '../interfaces/email-provider-strategy.interface';
 import { SendGridEmailProviderStrategy } from './sendgrid-email-provider.strategy';
 import { BrevoEmailProviderStrategy } from './brevo-email-provider.strategy';
+import { MailtrapEmailProviderStrategy } from './mailtrap-email-provider.strategy';
 import { configs } from 'src/configs/configs';
+import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
 
 @Injectable()
 export class EmailProviderFactory {
-  private readonly logger = new Logger(EmailProviderFactory.name);
   private readonly strategies: Map<EmailProvider, IEmailProviderStrategy>;
   private readonly fallbackOrder: EmailProvider[];
 
   constructor(
     private readonly sendGridStrategy: SendGridEmailProviderStrategy,
     private readonly brevoStrategy: BrevoEmailProviderStrategy,
+    private readonly mailtrapStrategy: MailtrapEmailProviderStrategy,
+    private readonly logger: CustodyLogger,
   ) {
     this.strategies = new Map<EmailProvider, IEmailProviderStrategy>([
       [EmailProvider.SENDGRID, sendGridStrategy],
       [EmailProvider.BREVO, brevoStrategy],
+      [EmailProvider.MAILTRAP, mailtrapStrategy],
     ]);
 
     this.fallbackOrder = this.parseFallbackOrder(
-      configs.EMAIL_PROVIDER_FALLBACK_ORDER,
+      configs.EMAIL_PROVIDER_FALLBACK_ORDER || 'Brevo,SendGrid',
     );
 
     this.logger.log(
@@ -63,7 +67,7 @@ export class EmailProviderFactory {
 
         return { provider, success: true };
       } catch (error) {
-        this.logger.error(`Failed to send via ${provider}: ${error.message}`);
+        this.logger.error(`Failed to send via ${provider}: ${error}`);
         errors.push({ provider, error });
 
         continue;

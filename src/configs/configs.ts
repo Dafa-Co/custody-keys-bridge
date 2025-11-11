@@ -30,9 +30,10 @@ export const configs = {
 
   // mail
   SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-  SENDGRID_EMAIL: process.env.SENDGRID_EMAIL,
   EMAIL_SENDER: process.env.EMAIL_SENDER,
   EMAIL_SENDER_NAME: process.env.EMAIL_SENDER_NAME,
   BREVO_API_KEY: process.env.BREVO_API_KEY,
+  MAILTRAP_TOKEN: process.env.MAILTRAP_TOKEN,
   EMAIL_PROVIDER_FALLBACK_ORDER: process.env.EMAIL_PROVIDER_FALLBACK_ORDER,
+    
 };

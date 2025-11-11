@@ -6,12 +6,11 @@ import {
   IEmailOptions,
 } from '../interfaces/email-provider-strategy.interface';
 import { EmailProvider } from '../enums/email-provider.enum';
+import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
 
 @Injectable()
 export class SendGridEmailProviderStrategy implements IEmailProviderStrategy {
-  private readonly logger = new Logger(SendGridEmailProviderStrategy.name);
-
-  constructor() {
+  constructor(private readonly logger: CustodyLogger) {
     sgMail.setApiKey(configs.SENDGRID_API_KEY);
   }
 
