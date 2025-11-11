@@ -28,7 +28,7 @@ export class EmailProviderFactory {
     ]);
 
     this.fallbackOrder = this.parseFallbackOrder(
-      configs.EMAIL_PROVIDER_FALLBACK_ORDER || 'Brevo,SendGrid',
+      configs.EMAIL_PROVIDER_FALLBACK_ORDER || 'Mailtrap,Brevo,SendGrid',
     );
 
     this.logger.log(
