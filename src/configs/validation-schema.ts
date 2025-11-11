@@ -30,6 +30,7 @@ export const envValidationSchema = Joi.object({
     EMAIL_SENDER_NAME: Joi.string().required(),
     BREVO_API_KEY: Joi.string().required(),
     SENDGRID_API_KEY: Joi.string().required(),
-    EMAIL_PROVIDER_FALLBACK_ORDER: Joi.string().required(),
+    MAILTRAP_TOKEN: Joi.string().required(),
+    EMAIL_PROVIDER_FALLBACK_ORDER: Joi.string().optional(),
   
 })

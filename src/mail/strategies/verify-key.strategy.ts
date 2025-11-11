@@ -6,7 +6,7 @@ import { MailStrategy } from "../enums/mail-strategy.enum";
 import { VerifyKeyEmailStrategyPayload } from "src/libs/dto/verify-key-email-strategy-payload.dto";
 
 @Injectable()
-export class VerifyKeyOptionsStrategy implements IMailOptionsStrategy<MailStrategy.VERIFY_KEY> {
+export class VerifyKeyMailOptionsStrategy implements IMailOptionsStrategy<MailStrategy.VERIFY_KEY> {
     async getMailOptions(payload: VerifyKeyEmailStrategyPayload): Promise<IPartialMailOptions> {
         const verifyKeyTemplate = await readFile(
             join(__dirname, `./templates/backup-storage-verify-key.template.html`),
