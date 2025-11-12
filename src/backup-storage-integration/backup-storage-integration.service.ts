@@ -37,23 +37,7 @@ export class BackupStorageIntegrationService {
     private backupStorageRepository: Repository<BackupStorage>,
     private readonly backupStorageCommunicationManagerService: BackupStorageCommunicationManagerService,
     private readonly eventEmitter: EventEmitter2,
-  ) {
-    setTimeout(() => {
-      const emailEvent: ISendEmailEvent<MailStrategy.VERIFY_KEY> = {
-        type: MailStrategy.VERIFY_KEY,
-        emails: ['alaaamin706@gmail.com'],
-        payload: {
-          name: 'Test SCM',
-          verifyKey: '1234567890abcdef1234567890abcdef',
-        },
-      };
-
-      this.eventEmitter.emitAsync(EmailEvents.sendEmail, emailEvent).then(() => {
-        console.log('Test email event emitted successfully') }).catch((error) => {
-          console.error('Error emitting test email event:', error);
-        });
-    }, 5000);
-  }
+  ) { }
 
   async getBackupStoragesInfo(
     backupStoragesIds: number[],
