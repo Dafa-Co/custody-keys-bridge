@@ -4,8 +4,8 @@ import { configs } from 'src/configs/configs';
 import {
   IEmailProviderStrategy,
   IEmailOptions,
-} from '../interfaces/email-provider-strategy.interface';
-import { EmailProvider } from '../enums/email-provider.enum';
+} from '../../interfaces/email-provider-strategy.interface';
+import { EmailProvider } from '../../enums/email-provider.enum';
 import { CustodyLogger } from 'rox-custody_common-modules/libs/services/logger/custody-logger.service';
 
 @Injectable()
@@ -27,6 +27,6 @@ export class SendGridEmailProviderStrategy implements IEmailProviderStrategy {
       html: emailData.html,
     };
     await sgMail.send(mailOptions);
-    this.logger.log(`Email sent succes sfully via SendGrid to ${emailData.to}`);
+    this.logger.log(`Email sent successfully via SendGrid to ${emailData.to}`);
   }
 }

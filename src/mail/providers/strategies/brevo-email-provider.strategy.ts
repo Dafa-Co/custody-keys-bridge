@@ -2,8 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   IEmailProviderStrategy,
   IEmailOptions,
-} from '../interfaces/email-provider-strategy.interface';
-import { EmailProvider } from '../enums/email-provider.enum';
+} from '../../interfaces/email-provider-strategy.interface';
+import { EmailProvider } from '../../enums/email-provider.enum';
 import {
   SendSmtpEmail,
   TransactionalEmailsApi,

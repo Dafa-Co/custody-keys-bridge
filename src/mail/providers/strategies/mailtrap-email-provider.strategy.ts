@@ -3,8 +3,8 @@ import { MailtrapClient } from 'mailtrap';
 import {
   IEmailOptions,
   IEmailProviderStrategy,
-} from '../interfaces/email-provider-strategy.interface';
-import { EmailProvider } from '../enums/email-provider.enum';
+} from '../../interfaces/email-provider-strategy.interface';
+import { EmailProvider } from '../../enums/email-provider.enum';
 import { configs } from 'src/configs/configs';
 
 @Injectable()

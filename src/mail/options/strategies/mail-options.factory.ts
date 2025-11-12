@@ -1,0 +1,39 @@
+import { Injectable } from "@nestjs/common";
+import { VerifyKeyMailOptionsStrategy } from "./verify-key.strategy";
+import { MailStrategy } from "../../enums/mail-strategy.enum";
+import { configs } from "src/configs/configs";
+import { IPartialMailOptions } from "../interfaces/mails-options-strategy.interface";
+
+@Injectable()
+export class MailOptionsFactory {
+    constructor(
+        private readonly verifyKeyStrategy: VerifyKeyMailOptionsStrategy,
+    ) {}
+
+    async create(type: MailStrategy, emails: string[], payload: any): Promise<any> {
+        try {
+          let mailsOptions: IPartialMailOptions;
+
+          switch (type) {
+            case MailStrategy.VERIFY_KEY:
+              mailsOptions =
+                await this.verifyKeyStrategy.getMailOptions(payload);
+              break;
+            default:
+              throw new Error(`Unknown mail type: ${type}`);
+          }
+
+          return {
+            ...mailsOptions,
+            from: {
+              name: configs.EMAIL_SENDER_NAME,
+              email: configs.EMAIL_SENDER,
+            },
+            to: emails,
+          };
+        } catch (error) {
+          console.error('Error configuring email options', error);
+          throw error;
+        }
+    }
+}

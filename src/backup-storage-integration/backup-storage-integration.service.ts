@@ -3,7 +3,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { KeyNotFoundInSCM } from 'rox-custody_common-modules/libs/custom-errors/key-not-found-in-scm.exception';
 import { SCMNotConnected } from 'rox-custody_common-modules/libs/custom-errors/scm-not-connected.exception';
-import { backupStorageConnectionTypes, ICommunicatingWithBackupStorageForKeyManagement, IGetKeyFromBackupStorage, IRequestDataFromApiApproval, ISendRequestToBackupStorage } from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
+import {
+  backupStorageConnectionTypes,
+  ICommunicatingWithBackupStorageForKeyManagement,
+  IGetKeyFromBackupStorage,
+  IRequestDataFromApiApproval,
+  ISendRequestToBackupStorage,
+} from 'rox-custody_common-modules/libs/interfaces/send-to-backup-storage.interface';
 import { firstValueFrom } from 'rxjs';
 import { VerifyKeyHeader } from 'src/libs/constant/api-approval-constant';
 import { BackupStorage } from './entities/backup-storage.entity';
@@ -21,6 +27,7 @@ import { BackupStorageActiveSession } from './entities/backup-storage-active-ses
 import { getApiApprovalUrl } from 'rox-custody_common-modules/libs/utils/api-approval';
 import { IEncryptedPayload } from 'rox-custody_common-modules/libs/services/secure-communication/interfaces/encrypted-payload.interface';
 import { BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER } from './constants/backup-storage.constants';
+import { set } from 'date-fns';
 
 @Injectable()
 export class BackupStorageIntegrationService {
@@ -52,9 +59,9 @@ export class BackupStorageIntegrationService {
     if (sortActiveSessions) {
       backupStorages.forEach((backupStorage) => {
         backupStorage.activeSessions = backupStorage.activeSessions.sort(
-          (a, b) => b.expiresAt.getTime() - a.expiresAt.getTime()
+          (a, b) => b.expiresAt.getTime() - a.expiresAt.getTime(),
         );
-      })
+      });
     }
 
     return backupStorages;
@@ -68,13 +75,12 @@ export class BackupStorageIntegrationService {
 
     for (const activeSession of activeSessions) {
       try {
-        return await this.backupStorageCommunicationManagerService
-          .sendRequestToBackupStorage<T>(
-            url,
-            JSON.stringify(payload),
-            activeSession,
-            decryptResponse,
-          )
+        return await this.backupStorageCommunicationManagerService.sendRequestToBackupStorage<T>(
+          url,
+          JSON.stringify(payload),
+          activeSession,
+          decryptResponse,
+        );
       } catch (error) {
         // if the status code is 404, that mean the key is not found in the api approval
         if (error?.response?.data.message?.toLowerCase() === 'file not found') {
@@ -91,33 +97,44 @@ export class BackupStorageIntegrationService {
   }
 
   async storeKeyToApiApproval(dto: ISendRequestToBackupStorage): Promise<void> {
-    const { url, sliceIndex, privateKeySlice, activeSessions, privateKeyId, backupStorageId } = dto;
+    const {
+      url,
+      sliceIndex,
+      privateKeySlice,
+      activeSessions,
+      privateKeyId,
+      backupStorageId,
+    } = dto;
 
     const payload = {
       key_id: dto.privateKeyId,
-      key: `${sliceIndex}${BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER}${privateKeySlice}`
-    }
+      key: `${sliceIndex}${BACKUP_STORAGE_PRIVATE_KEY_INDEX_BREAKER}${privateKeySlice}`,
+    };
 
-    return this.communicatingWithBackupStorageForKeyManagement<void>({
-      url,
-      activeSessions,
-      payload,
-      backupStorageId,
-      privateKeyId,
-    }, false);
+    return this.communicatingWithBackupStorageForKeyManagement<void>(
+      {
+        url,
+        activeSessions,
+        payload,
+        backupStorageId,
+        privateKeyId,
+      },
+      false,
+    );
   }
 
-  async getKeyFromApiApproval(
-    dto: IGetKeyFromBackupStorage,
-  ): Promise<string> {
-    const { url, activeSessions, folderName, backupStorageId, privateKeyId } = dto;
+  async getKeyFromApiApproval(dto: IGetKeyFromBackupStorage): Promise<string> {
+    const { url, activeSessions, folderName, backupStorageId, privateKeyId } =
+      dto;
 
     const payload = {
       key_id: dto.privateKeyId,
-    }
+    };
 
-    const results =
-      await this.communicatingWithBackupStorageForKeyManagement<{ private_key: string }>({
+    const results = await this.communicatingWithBackupStorageForKeyManagement<{
+      private_key: string;
+    }>(
+      {
         url: getApiApprovalUrl(
           url,
           backupStorageConnectionTypes.getKey,
@@ -127,7 +144,9 @@ export class BackupStorageIntegrationService {
         payload,
         backupStorageId,
         privateKeyId,
-      }, true);
+      },
+      true,
+    );
 
     if (!results.private_key) {
       throw new KeyNotFoundInSCM();
@@ -137,9 +156,11 @@ export class BackupStorageIntegrationService {
   }
 
   async handshakeWithBackupStorage(
-    handshakeData: BackupStorageHandshakingDto
+    handshakeData: BackupStorageHandshakingDto,
   ): Promise<bridgeHandshakingResponseDto> {
-    return this.backupStorageCommunicationManagerService.handshakeWithBackupStorage(handshakeData);
+    return this.backupStorageCommunicationManagerService.handshakeWithBackupStorage(
+      handshakeData,
+    );
   }
 
   generateVerifyKey(): string {
@@ -147,15 +168,25 @@ export class BackupStorageIntegrationService {
   }
 
   async generateScm(dto: GenerateBridgeScmDto) {
-    const verifyKey = this.generateVerifyKey()
+    const verifyKey = this.generateVerifyKey();
 
-    await this.backupStorageRepository.upsert({
-      id: dto.id,
-      corporateId: dto.corporateId,
-    }, ['id'])
+    await this.backupStorageRepository.upsert(
+      {
+        id: dto.id,
+        corporateId: dto.corporateId,
+      },
+      ['id'],
+    );
 
-    await this.backupStorageCommunicationManagerService.clearVerifyKeysOfBackupStorage(dto.corporateId, dto.id);
-    await this.backupStorageCommunicationManagerService.saveVerifyKey(verifyKey, dto.corporateId, dto.id);
+    await this.backupStorageCommunicationManagerService.clearVerifyKeysOfBackupStorage(
+      dto.corporateId,
+      dto.id,
+    );
+    await this.backupStorageCommunicationManagerService.saveVerifyKey(
+      verifyKey,
+      dto.corporateId,
+      dto.id,
+    );
 
     const emailEvent: ISendEmailEvent<MailStrategy.VERIFY_KEY> = {
       type: MailStrategy.VERIFY_KEY,
@@ -163,12 +194,9 @@ export class BackupStorageIntegrationService {
       payload: {
         name: dto.name,
         verifyKey,
-      }
-    }
+      },
+    };
 
-    this.eventEmitter.emit(
-      EmailEvents.sendEmail,
-      emailEvent,
-    )
+    this.eventEmitter.emit(EmailEvents.sendEmail, emailEvent);
   }
 }
