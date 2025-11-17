@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { EmailProvider } from '../enums/email-provider.enum';
+import { EmailProvider } from '../../enums/email-provider.enum';
 import {
   IEmailProviderStrategy,
   IEmailOptions,
-} from '../interfaces/email-provider-strategy.interface';
+} from '../../interfaces/email-provider-strategy.interface';
 import { SendGridEmailProviderStrategy } from './sendgrid-email-provider.strategy';
 import { BrevoEmailProviderStrategy } from './brevo-email-provider.strategy';
 import { MailtrapEmailProviderStrategy } from './mailtrap-email-provider.strategy';
